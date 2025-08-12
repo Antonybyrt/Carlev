@@ -129,7 +129,7 @@ export default function Home() {
                 <Button
                   variant="outline"
                   className="px-6 py-3 border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10 transition-all duration-200"
-                >
+        >
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Voir Statistiques
                 </Button>
@@ -137,7 +137,7 @@ export default function Home() {
             </div>
           </motion.div>
         </main>
-      </div>
+    </div>
     </AuthGuard>
   )
 }

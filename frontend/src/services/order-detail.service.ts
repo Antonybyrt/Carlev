@@ -11,59 +11,18 @@ export default class OrderDetailService {
     };
   }
 
-  static async getOrderDetails(): Promise<ServiceResult<IOrderDetail[]>> {
-    try {
-      const response = await axios.get(
-        `${ApiService.baseURL}/order_detail/`,
-        { headers: this.getAuthHeaders() }
-      );
-      
-      if (response.status === 200) {
-        return ServiceResult.success(response.data);
-      } else {
-        return ServiceResult.failed();
-      }
-    } catch (error) {
-      console.error("Error fetching order details:", error);
-      return ServiceResult.failed();
-    }
-  }
-
   static async createOrderDetail(orderDetail: IOrderDetail): Promise<ServiceResult<IOrderDetail>> {
     try {
-      const response = await axios.post(
-        `${ApiService.baseURL}/order_detail/`,
-        orderDetail,
-        { headers: this.getAuthHeaders() }
-      );
-      
-      if (response.status === 201) {
-        return ServiceResult.success(response.data);
-      } else {
+      const response = await axios.post(`${ApiService.baseURL}/order_detail`, orderDetail, {
+        headers: this.getAuthHeaders(),
+      });
+      return ServiceResult.success(response.data);
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Erreur lors de la création du détail de commande:", error.response.data?.message);
         return ServiceResult.failed();
       }
-    } catch (error) {
-      console.error("Error creating order detail:", error);
-      return ServiceResult.failed();
-    }
-  }
-
-  static async deleteOrderDetail(orderDetailId: number): Promise<ServiceResult<string>> {
-    try {
-      const response = await axios.delete(
-        `${ApiService.baseURL}/order_detail/${orderDetailId}`,
-        { headers: this.getAuthHeaders() }
-      );
-      
-      if (response.status === 200) {
-        return ServiceResult.success(response.data.message);
-      } else if (response.status === 404) {
-        return ServiceResult.notFound();
-      } else {
-        return ServiceResult.failed();
-      }
-    } catch (error) {
-      console.error("Error deleting order detail:", error);
+      console.error("Erreur de connexion:", error);
       return ServiceResult.failed();
     }
   }

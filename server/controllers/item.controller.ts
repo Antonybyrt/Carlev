@@ -20,13 +20,13 @@ export class ItemController {
 
     async createItem(req: Request, res: Response): Promise<void> {
         try {
-            const { item_name } = req.body;
-            if (!item_name) {
-                res.status(400).json({ error: "item_name is required" });
+            const { itemName } = req.body;
+            if (!itemName) {
+                res.status(400).json({ error: "itemName is required" });
                 return;
             }
 
-            const result = await ItemService.createItem(item_name);
+            const result = await ItemService.createItem(itemName);
             if (result.errorCode === ServiceErrorCode.success) {
                 res.status(201).json(result.result);
             } else {

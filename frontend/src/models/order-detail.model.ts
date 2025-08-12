@@ -1,6 +1,6 @@
 export interface IOrderDetail {
   id?: number;
+  itemId: number;
   quantity: number;
-  item_id: number;
-  order_id: number;
+  orderId: number;
 } 
