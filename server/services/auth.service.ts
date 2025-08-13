@@ -17,9 +17,30 @@ export class AuthService {
             });
             console.log('=====================================');
             
+            // Debug: Test de la requête étape par étape
+            console.log('=== TEST REQUÊTE ÉTAPE PAR ÉTAPE ===');
+            
+            // Test 1: Recherche par email seulement
+            const userByEmail = await User.findOne({ where: { email: login } });
+            console.log('Test 1 - Recherche par email:', userByEmail ? 'TROUVÉ' : 'NON TROUVÉ');
+            if (userByEmail && userByEmail.pw) {
+                console.log('Email trouvé, password en base:', userByEmail.pw);
+                console.log('Password reçu:', password);
+                console.log('Sont-ils identiques?', userByEmail.pw === password);
+                console.log('Longueur password base:', userByEmail.pw.length);
+                console.log('Longueur password reçu:', password.length);
+            }
+            
+            // Test 2: Recherche par password seulement
+            const userByPassword = await User.findOne({ where: { pw: password } });
+            console.log('Test 2 - Recherche par password:', userByPassword ? 'TROUVÉ' : 'NON TROUVÉ');
+            
+            // Test 3: Recherche avec les deux critères
             const user = await User.findOne({
                 where: { email: login, pw: password },
             });
+            console.log('Test 3 - Recherche par email + password:', user ? 'TROUVÉ' : 'NON TROUVÉ');
+            console.log('=====================================');
 
             if (!user) {
                 console.log(`Utilisateur non trouvé pour l'email: ${login}`);
