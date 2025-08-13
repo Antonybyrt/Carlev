@@ -14,6 +14,9 @@ import { OrderController } from './controllers';
 import { OrderDetailController } from './controllers';
 import { RegistrationController } from './controllers';
 import { SupplierController } from './controllers';
+import { LoanerCarController } from './controllers';
+import { LoanController } from './controllers';
+import { setupAllAssociations } from './models';
 
 const app = express();
 
@@ -31,6 +34,8 @@ const orderController = new OrderController();
 const orderDetailController = new OrderDetailController();
 const registrationController = new RegistrationController();
 const supplierController = new SupplierController();
+const loanerCarController = new LoanerCarController();
+const loanController = new LoanController();
 
 app.use("/auth", authController.buildRoutes());
 
@@ -44,6 +49,10 @@ app.use("/orders", AuthMiddleware.requireAuth, orderController.buildRoutes());
 app.use("/order_detail", AuthMiddleware.requireAuth, orderDetailController.buildRoutes());
 app.use("/registration", AuthMiddleware.requireAuth, registrationController.buildRoutes());
 app.use("/supplier", AuthMiddleware.requireAuth, supplierController.buildRoutes());
+app.use("/loaner_car", AuthMiddleware.requireAuth, loanerCarController.buildRoutes());
+app.use("/loan", AuthMiddleware.requireAuth, loanController.buildRoutes());
+
+setupAllAssociations();
 
 sequelize.sync({ force: false, alter: false }).then(() => {
     app.listen(Number(process.env.PORT), () => {
