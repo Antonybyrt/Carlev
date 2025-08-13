@@ -45,19 +45,10 @@ app.use("/order_detail", AuthMiddleware.requireAuth, orderDetailController.build
 app.use("/registration", AuthMiddleware.requireAuth, registrationController.buildRoutes());
 app.use("/supplier", AuthMiddleware.requireAuth, supplierController.buildRoutes());
 
-sequelize.sync({ force: false, alter: false }).then(async () => {
-    try {
-        await sequelize.authenticate();
-        console.log('Connexion à la base de données établie avec succès.');
-        
-        app.listen(Number(process.env.PORT), () => {
-            console.log(`Server running on port ${process.env.PORT || 3001}!`);
-        });
-    } catch (error) {
-        console.error('Erreur de connexion à la base de données:', error);
-        process.exit(1);
-    }
+sequelize.sync({ force: false, alter: false }).then(() => {
+    app.listen(Number(process.env.PORT), () => {
+        console.log("Server running on port 3001!");
+    });
 }).catch((error: unknown) => {
     console.error("Database sync error:", error);
-    process.exit(1);
 });
