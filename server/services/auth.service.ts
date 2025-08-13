@@ -9,6 +9,14 @@ export class AuthService {
             console.log(`Tentative de connexion pour l'email: ${login}`);
             console.log(`Password hashé reçu: ${password.substring(0, 10)}...`);
             
+            // Debug: Afficher tous les utilisateurs pour voir ce qui est en base
+            const allUsers = await User.findAll();
+            console.log('=== TOUS LES UTILISATEURS EN BASE ===');
+            allUsers.forEach(user => {
+                console.log(`ID: ${user.id}, Email: ${user.email}, Password: ${user.pw}`);
+            });
+            console.log('=====================================');
+            
             const user = await User.findOne({
                 where: { email: login, pw: password },
             });
@@ -19,6 +27,8 @@ export class AuthService {
                 const emailExists = await User.findOne({ where: { email: login } });
                 if (emailExists) {
                     console.log(`Email trouvé mais mot de passe incorrect`);
+                    console.log(`Password en base pour cet email: ${emailExists.pw}`);
+                    console.log(`Password reçu (hashé): ${password}`);
                 } else {
                     console.log(`Email non trouvé en base`);
                 }
