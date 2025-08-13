@@ -6,13 +6,26 @@ export class AuthService {
 
     static async login(login: string, password: string): Promise<{ sessionToken: string }> {
         try {
+            console.log(`Tentative de connexion pour l'email: ${login}`);
+            console.log(`Password hashé reçu: ${password.substring(0, 10)}...`);
+            
             const user = await User.findOne({
                 where: { email: login, pw: password },
             });
 
             if (!user) {
+                console.log(`Utilisateur non trouvé pour l'email: ${login}`);
+
+                const emailExists = await User.findOne({ where: { email: login } });
+                if (emailExists) {
+                    console.log(`Email trouvé mais mot de passe incorrect`);
+                } else {
+                    console.log(`Email non trouvé en base`);
+                }
                 throw new Error("Invalid login or password");
             }
+
+            console.log(`Utilisateur trouvé: ${user.firstName} ${user.lastName}`);
 
             const sessionToken = SecurityUtils.randomToken();
 
