@@ -7,6 +7,7 @@ export class LoanerCar extends Model {
     public carModelId!: number;
     public registrationId!: number;
     public status!: string;
+    public isDeleted!: boolean;
 
     public brand?: any;
     public model?: any;
@@ -58,6 +59,12 @@ LoanerCar.init({
     status: {
         type: DataTypes.STRING,
         allowNull: false,
+    },
+    isDeleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: 'is_deleted',
     },
 }, {
     sequelize,

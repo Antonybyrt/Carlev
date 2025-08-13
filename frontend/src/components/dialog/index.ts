@@ -11,3 +11,4 @@ export { DeleteRegistrationDialog } from "./delete-registration-dialog";
 export { CreateItemDialog } from "./create-item-dialog";
 export { DeleteItemDialog } from "./delete-item-dialog";
 export { DeleteOrderDialog } from "./delete-order-dialog"; 
+export { ArchiveLoanerCarDialog } from "./archive-loaner-car-dialog";

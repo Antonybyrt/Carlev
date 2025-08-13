@@ -138,12 +138,33 @@ DELETE /supplier/:id       - Supprimer un fournisseur
 GET    /supplier/count     - Nombre total de fournisseurs
 ```
 
-### 🚙 Voitures de Prêt
+### Voitures de Prêt
+
+#### Routes disponibles :
+- `GET /loaner_car` - Récupérer toutes les voitures de prêt
+- `GET /loaner_car/:id` - Récupérer une voiture de prêt par ID
+- `POST /loaner_car` - Créer une nouvelle voiture de prêt
+- `PATCH /loaner_car/:id` - Archiver une voiture de prêt (soft delete)
+- `PUT /loaner_car/:id` - Mettre à jour une voiture de prêt
+
+#### Exemple de données pour la création :
+```json
+{
+  "carBrandId": 1,
+  "carModelId": 1,
+  "registrationId": 1,
+  "status": "DISPONIBLE"
+}
 ```
-GET    /loaner_car                 - Liste de toutes les voitures de prêt
-GET    /loaner_car/:id             - Récupérer une voiture de prêt spécifique
-POST   /loaner_car                 - Créer une nouvelle voiture de prêt
-DELETE /loaner_car/:id             - Supprimer une voiture de prêt
+
+#### Exemple de données pour la mise à jour :
+```json
+{
+  "carBrandId": 2,
+  "carModelId": 3,
+  "registrationId": 5,
+  "status": "EN_PRET"
+}
 ```
 
 ### 📋 Système de Prêts
