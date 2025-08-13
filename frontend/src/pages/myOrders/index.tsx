@@ -1,119 +1,149 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowLeft, Package, Car, User, Calendar, Clock, AlertCircle, CheckCircle, XCircle, Plus } from "lucide-react"
+import { Package, Car, User, CreditCard, FileText, Calendar, Truck, ArrowLeft, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Navbar } from "@/components/navbar"
 import { AuthGuard } from "@/components/auth-guard"
 import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { ErrorService } from "@/services/error.service"
+import { ServiceErrorCode } from "@/services/service.result"
+import OrderService from "@/services/order.service"
+import { IOrderExtended } from "@/models/order.model"
+import { DeleteOrderDialog } from "@/components/dialog";
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 
 export default function MyOrdersPage() {
-  const router = useRouter()
+  const router = useRouter();
+  const [orders, setOrders] = useState<IOrderExtended[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<IOrderExtended[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [searchAccount, setSearchAccount] = useState("");
+  const [searchClient, setSearchClient] = useState("");
+  const [searchDate, setSearchDate] = useState("");
+  const [searchPlate, setSearchPlate] = useState("");
+  
+  const [isDeleteOrderDialogOpen, setIsDeleteOrderDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<IOrderExtended | null>(null);
 
-  const orders = [
-    {
-      id: "ORD-001",
-      clientName: "Jean Dupont",
-      vehicle: "Renault Clio 2020",
-      parts: "Pare-choc avant, Phare droit",
-      priority: "high",
-      status: "pending",
-      date: "2024-01-15",
-      budget: 450.00
-    },
-    {
-      id: "ORD-002",
-      clientName: "Marie Martin",
-      vehicle: "Peugeot 208 2021",
-      parts: "Rétroviseur gauche, Clignotant",
-      priority: "medium",
-      status: "completed",
-      date: "2024-01-10",
-      budget: 180.00
-    },
-    {
-      id: "ORD-003",
-      clientName: "Pierre Durand",
-      vehicle: "Citroën C3 2019",
-      parts: "Capot, Calandre",
-      priority: "urgent",
-      status: "in_progress",
-      date: "2024-01-12",
-      budget: 800.00
-    },
-    {
-      id: "ORD-004",
-      clientName: "Sophie Bernard",
-      vehicle: "Volkswagen Golf 2022",
-      parts: "Aile avant droite, Portière conducteur",
-      priority: "low",
-      status: "cancelled",
-      date: "2024-01-08",
-      budget: 1200.00
-    }
-  ]
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        const result = await OrderService.getAllOrders();
+        if (result && result.errorCode === ServiceErrorCode.success) {
+          setOrders(result.result || []);
+          setFilteredOrders(result.result || []);
+          console.log("Logins récupérés:", result.result);
+        } else {
+          setOrders([]);
+          setFilteredOrders([]);
+          ErrorService.errorMessage("Erreur", "Impossible de récupérer les comptes de connexion");
+        }
+      } catch (error) {
+        console.error("Exception lors de la récupération des logins:", error);
+        ErrorService.errorMessage("Erreur", "Impossible de récupérer les comptes de connexion");
+        setOrders([]);
+        setFilteredOrders([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="w-4 h-4 text-yellow-400" />
-      case 'in_progress':
-        return <AlertCircle className="w-4 h-4 text-blue-400" />
-      case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-400" />
-      case 'cancelled':
-        return <XCircle className="w-4 h-4 text-red-400" />
-      default:
-        return <Clock className="w-4 h-4 text-gray-400" />
-    }
-  }
+    loadOrders();
+  }, []);
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'En attente'
-      case 'in_progress':
-        return 'En cours'
-      case 'completed':
-        return 'Terminée'
-      case 'cancelled':
-        return 'Annulée'
-      default:
-        return 'Inconnu'
-    }
-  }
+  useEffect(() => {
+    let filtered = orders;
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent':
-        return 'bg-red-500/20 text-red-400 border-red-500/30'
-      case 'high':
-        return 'bg-orange-500/20 text-orange-400 border-orange-500/30'
-      case 'medium':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-      case 'low':
-        return 'bg-green-500/20 text-green-400 border-green-500/30'
-      default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+    if (searchAccount.trim()) {
+      filtered = filtered.filter(order =>
+        order.login?.loginName?.toLowerCase().includes(searchAccount.toLowerCase())
+      );
     }
-  }
 
-  const getPriorityText = (priority: string) => {
-    switch (priority) {
-      case 'urgent':
-        return 'Urgente'
-      case 'high':
-        return 'Haute'
-      case 'medium':
-        return 'Moyenne'
-      case 'low':
-        return 'Basse'
-      default:
-        return 'Inconnue'
+    if (searchClient.trim()) {
+      filtered = filtered.filter(order =>
+        order.customer?.firstName?.toLowerCase().includes(searchClient.toLowerCase()) ||
+        order.customer?.lastName?.toLowerCase().includes(searchClient.toLowerCase())
+      );
     }
-  }
+
+    if (searchDate.trim()) {
+      const searchDateObj = new Date(searchDate);
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.creationDate);
+        return orderDate.toDateString() === searchDateObj.toDateString();
+      });
+    }
+
+    if (searchPlate.trim()) {
+      const cleanSearchPlate = searchPlate.replace(/-/g, '').toLowerCase();
+      filtered = filtered.filter(order => {
+        const cleanOrderPlate = order.registration?.registrationName?.replace(/-/g, '').toLowerCase() || '';
+        return cleanOrderPlate.includes(cleanSearchPlate);
+      });
+    }
+
+    setFilteredOrders(filtered);
+  }, [orders, searchAccount, searchClient, searchDate, searchPlate]);
+
+  const formatDate = (dateString: string | Date) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    
+    const orderDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const diffTime = orderDateOnly.getTime() - nowDateOnly.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 0) {
+      return `${date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })}`;
+    }
+    
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const getTotalItems = (orderDetails: any[] | undefined) => {
+    return orderDetails?.reduce((total, detail) => total + detail.quantity, 0) || 0;
+  };
+
+  const getTimeIndicator = (dateString: string | Date) => {
+    const orderDate = new Date(dateString);
+    const now = new Date();
+    
+    const orderDateOnly = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
+    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const diffTime = orderDateOnly.getTime() - nowDateOnly.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0) {
+      return { text: "Prochainement", color: "text-yellow-400", bgColor: "bg-yellow-500/20", borderColor: "border-yellow-500/30" };
+    } else if (diffDays === 0) {
+      return { text: "Aujourd'hui", color: "text-green-400", bgColor: "bg-green-500/20", borderColor: "border-green-500/30" };
+    } else if (diffDays === -1) {
+      return { text: "Hier", color: "text-blue-400", bgColor: "bg-blue-500/20", borderColor: "border-blue-500/30" };
+    } else if (diffDays >= -7) {
+      return { text: "Cette semaine", color: "text-purple-400", bgColor: "bg-purple-500/20", borderColor: "border-purple-500/30" };
+    } else if (diffDays >= -30) {
+      return { text: "Ce mois", color: "text-orange-400", bgColor: "bg-orange-500/20", borderColor: "border-orange-500/30" };
+    } else {
+      return { text: "Ancienne", color: "text-gray-400", bgColor: "bg-gray-500/20", borderColor: "border-gray-500/30" };
+    }
+  };
 
   return (
     <AuthGuard>
@@ -121,7 +151,6 @@ export default function MyOrdersPage() {
         <Navbar />
         
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -129,191 +158,358 @@ export default function MyOrdersPage() {
             className="flex items-center justify-between mb-8"
           >
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.back()}
-                className="text-gray-400 hover:text-white"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Retour
-              </Button>
               <div>
                 <h1 className="text-3xl font-bold text-white">Mes Commandes</h1>
-                <p className="text-gray-400">Gérez et suivez vos commandes de pièces automobiles</p>
+                <p className="text-gray-400">Consultez l'historique de vos commandes</p>
               </div>
             </div>
             
             <Button
               onClick={() => router.push("/newOrder")}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-500/25"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Package className="w-4 h-4 mr-2" />
               Nouvelle Commande
             </Button>
           </motion.div>
 
-          {/* Statistiques */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-6"
+          >
+            <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-lg text-white flex items-center space-x-2">
+                  <FileText className="w-5 h-5 text-blue-400" />
+                  <span>Filtres de recherche</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="searchAccount" className="text-gray-300 text-sm">Compte</Label>
+                    <Input
+                      id="searchAccount"
+                      placeholder="Rechercher par compte..."
+                      value={searchAccount}
+                      onChange={(e) => setSearchAccount(e.target.value)}
+                      className="bg-gray-700/60 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="searchClient" className="text-gray-300 text-sm">Client</Label>
+                    <Input
+                      id="searchClient"
+                      placeholder="Rechercher par client..."
+                      value={searchClient}
+                      onChange={(e) => setSearchClient(e.target.value)}
+                      className="bg-gray-700/60 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="searchDate" className="text-gray-300 text-sm">Date</Label>
+                    <Input
+                      id="searchDate"
+                      type="date"
+                      value={searchDate}
+                      onChange={(e) => setSearchDate(e.target.value)}
+                      className="bg-gray-700/60 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="searchPlate" className="text-gray-300 text-sm">Plaque</Label>
+                    <Input
+                      id="searchPlate"
+                      placeholder="Rechercher par plaque..."
+                      value={searchPlate}
+                      onChange={(e) => setSearchPlate(e.target.value)}
+                      className="bg-gray-700/60 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400"
+                    />
+                  </div>
+                </div>
+
+                {(searchAccount || searchClient || searchDate || searchPlate) && (
+                  <div className="mt-4 flex justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchAccount("");
+                        setSearchClient("");
+                        setSearchDate("");
+                        setSearchPlate("");
+                      }}
+                      className="border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10"
+                    >
+                      Réinitialiser les filtres
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+            className="space-y-6"
           >
-            <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">En attente</p>
-                    <p className="text-2xl font-bold text-white">2</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <AlertCircle className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">En cours</p>
-                    <p className="text-2xl font-bold text-white">1</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-green-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Terminées</p>
-                    <p className="text-2xl font-bold text-white">1</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                    <Package className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Total</p>
-                    <p className="text-2xl font-bold text-white">4</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Liste des commandes */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="space-y-4"
-          >
-            {orders.map((order, index) => (
-              <motion.div
-                key={order.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                whileHover={{ scale: 1.01, y: -2 }}
-              >
-                <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-                      {/* Informations principales */}
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center space-x-3">
-                          <h3 className="text-lg font-semibold text-white">{order.id}</h3>
-                          <Badge className={getPriorityColor(order.priority)}>
-                            {getPriorityText(order.priority)}
-                          </Badge>
-                          <div className="flex items-center space-x-2">
-                            {getStatusIcon(order.status)}
-                            <span className="text-sm text-gray-300">{getStatusText(order.status)}</span>
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+                <p className="text-gray-400 mt-4">Chargement des commandes...</p>
+              </div>
+            ) : filteredOrders.length === 0 ? (
+              <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">
+                <CardContent className="text-center py-12">
+                  <Package className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-300 mb-2">
+                    {orders.length === 0 ? "Aucune commande" : "Aucune commande trouvée"}
+                  </h3>
+                  <p className="text-gray-400 mb-6">
+                    {orders.length === 0 
+                      ? "Vous n'avez pas encore passé de commande"
+                      : "Aucune commande ne correspond à vos critères de recherche"
+                    }
+                  </p>
+                  {orders.length === 0 ? (
+                    <Button
+                      onClick={() => router.push("/newOrder")}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      Passer votre première commande
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchAccount("");
+                        setSearchClient("");
+                        setSearchDate("");
+                        setSearchPlate("");
+                      }}
+                      className="border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10"
+                    >
+                      Réinitialiser les filtres
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              filteredOrders.map((order, index) => (
+                <motion.div
+                  key={order.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                >
+                  <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+                    <CardHeader className="border-b border-gray-700 px-6 pb-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="bg-blue-500/20 p-3 rounded-lg border border-blue-500/30">
+                            <Package className="w-7 h-7 text-blue-400" />
+                          </div>
+                          <div>
+                            <div className="flex items-center space-x-3 mb-1">
+                              <CardTitle className="text-2xl text-white font-bold">
+                                Commande #{order.id}
+                              </CardTitle>
+                              {(() => {
+                                const timeIndicator = getTimeIndicator(order.creationDate);
+                                return (
+                                  <div className={`px-2 py-1 rounded-md text-xs font-medium border ${timeIndicator.bgColor} ${timeIndicator.borderColor} ${timeIndicator.color}`}>
+                                    {timeIndicator.text}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                            <CardDescription className="text-gray-300 text-base">
+                              Commandée le {formatDate(order.creationDate)}
+                            </CardDescription>
                           </div>
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <div className="flex items-center space-x-2">
-                            <User className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-300">{order.clientName}</span>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-400 mb-1">Total pièces</div>
+                          <div className="text-3xl font-bold text-blue-400">
+                            {getTotalItems(order.orderDetails)}
                           </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <Car className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-300">{order.vehicle}</span>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-300">{order.date}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Package className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-300">{order.parts}</span>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-400">Budget estimé:</span>
-                            <span className="text-lg font-semibold text-green-400">{order.budget.toFixed(2)} €</span>
+                          <div className="text-xs text-gray-500">
+                            {order.orderDetails?.length || 0} article(s)
                           </div>
                         </div>
                       </div>
-                      
-                      {/* Actions */}
-                      <div className="flex flex-col sm:flex-row gap-2">
+                    </CardHeader>
+                    
+                    <CardContent className="p-6">
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="space-y-4">
+                            <div className="bg-gray-700/30 rounded-lg p-4">
+                              <h4 className="text-base font-bold text-white mb-3 flex items-center border-b border-gray-600/50 pb-2">
+                                <User className="w-4 h-4 mr-2 text-blue-400" />
+                                Informations du Compte
+                              </h4>
+                              <div className="space-y-2">
+                                <div>
+                                  <div className="text-xs text-gray-500">Compte utilisé</div>
+                                  <div className="text-white font-medium">
+                                    {order.login?.loginName || "Non spécifié"}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-gray-500">Client</div>
+                                  <div className="text-white font-medium">
+                                    {order.customer ? 
+                                      `${order.customer.firstName} ${order.customer.lastName}` : 
+                                      "Non spécifié"
+                                    }
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="bg-gray-700/30 rounded-lg p-4">
+                              <h4 className="text-base font-bold text-white mb-3 flex items-center border-b border-gray-600/50 pb-2">
+                                <Car className="w-4 h-4 mr-2 text-purple-400" />
+                                Véhicule
+                              </h4>
+                              <div className="space-y-2">
+                                <div>
+                                  <div className="text-xs text-gray-500">Marque & Modèle</div>
+                                  <div className="text-white font-medium">
+                                    {order.carBrand?.brandName && order.carModel?.modelName ? 
+                                      `${order.carBrand.brandName} ${order.carModel.modelName}` : 
+                                      "Non spécifié"
+                                    }
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-gray-500">Plaque</div>
+                                  <div className="text-white font-medium">
+                                    {order.registration?.registrationName || "Non spécifiée"}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="bg-gray-700/30 rounded-lg p-4">
+                              <h4 className="text-base font-bold text-white mb-3 flex items-center border-b border-gray-600/50 pb-2">
+                                <Truck className="w-4 h-4 mr-2 text-orange-400" />
+                                Fournisseur
+                              </h4>
+                              <div className="space-y-2">
+                                <div>
+                                  <div className="text-xs text-gray-500">Nom</div>
+                                  <div className="text-white font-medium">
+                                    {order.supplier?.supplierName || "Non spécifié"}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-gray-500">Date commande</div>
+                                  <div className="text-white font-medium text-sm">
+                                    {formatDate(order.creationDate)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-700/30 rounded-lg p-4">
+                          <h4 className="text-base font-bold text-white mb-4 flex items-center border-b border-gray-600/50 pb-2">
+                            <Package className="w-4 h-4 mr-2 text-blue-400" />
+                            Pièces commandées ({getTotalItems(order.orderDetails)} au total)
+                          </h4>
+                          
+                          {order.orderDetails && order.orderDetails.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {order.orderDetails.map((detail, detailIndex) => (
+                                <div
+                                  key={detail.id || detailIndex}
+                                  className="bg-gray-600/50 rounded-lg p-3 border border-gray-600/30"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                      <span className="text-white font-medium text-sm">
+                                        {detail.item?.itemName || `Pièce ${detail.itemId}`}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-gray-400 text-xs">Qté:</span>
+                                      <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-bold">
+                                        {detail.quantity}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-gray-400 text-sm italic text-center py-4">
+                              Aucun détail de pièce disponible
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                    <div className="border-t border-gray-700 px-6 py-4">
+                      <div className="flex justify-end">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10"
+                          onClick={() => {
+                            setOrderToDelete(order);
+                            setIsDeleteOrderDialogOpen(true);
+                          }}
+                          className="border-red-500/30 text-red-400 hover:text-red-300 hover:border-red-400 hover:bg-red-500/10 transition-all duration-200"
                         >
-                          Voir détails
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Supprimer la commande
                         </Button>
-                        
-                        {order.status === 'pending' && (
-                          <Button
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                          >
-                            Commencer
-                          </Button>
-                        )}
-                        
-                        {order.status === 'in_progress' && (
-                          <Button
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                          >
-                            Terminer
-                          </Button>
-                        )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                  </Card>
+                </motion.div>
+              ))
+            )}
           </motion.div>
         </main>
       </div>
+      
+      <DeleteOrderDialog
+        isOpen={isDeleteOrderDialogOpen}
+        onClose={() => {
+          setIsDeleteOrderDialogOpen(false);
+          setOrderToDelete(null);
+        }}
+        onOrderDeleted={() => {
+          const loadOrders = async () => {
+            try {
+              const result = await OrderService.getAllOrders();
+              if (result && result.errorCode === ServiceErrorCode.success) {
+                setOrders(result.result || []);
+                setFilteredOrders(result.result || []);
+              }
+            } catch (error) {
+              console.error("Erreur lors du rechargement des commandes:", error);
+            }
+          };
+          loadOrders();
+        }}
+        order={orderToDelete}
+      />
     </AuthGuard>
   )
 } 

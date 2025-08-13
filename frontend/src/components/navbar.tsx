@@ -12,7 +12,6 @@ export function Navbar() {
   const { scrollY } = useScroll()
   const [isScrolled, setIsScrolled] = useState(false)
 
-  // Effet de scroll pour changer l'apparence de la navbar
   const backgroundColor = useTransform(
     scrollY,
     [0, 100],

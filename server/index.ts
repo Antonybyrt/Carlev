@@ -3,7 +3,6 @@ import cors from 'cors';
 import sequelize from './config/database.config';
 import { AuthMiddleware } from './middleware';
 
-// Controllers
 import { AuthController } from './controllers';
 import { UserController } from './controllers';
 import { CarBrandController } from './controllers';
@@ -21,7 +20,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Initialize controllers
 const authController = new AuthController();
 const userController = new UserController();
 const carBrandController = new CarBrandController();

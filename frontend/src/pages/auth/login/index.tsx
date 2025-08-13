@@ -31,7 +31,7 @@ export default function LoginPage() {
       if (result) {
         setTimeout(() => {
           router.push("/")
-        }, 1500) // Délai un peu plus long pour voir le toast
+        }, 1500)
       }
     } catch (error) {
       ErrorService.errorMessage("Erreur inattendue", "Une erreur est survenue lors de la connexion")

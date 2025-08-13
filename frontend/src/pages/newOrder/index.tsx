@@ -52,27 +52,21 @@ export default function NewOrderPage() {
   const [isCreateCustomerDialogOpen, setIsCreateCustomerDialogOpen] = useState(false);
   const [isDeleteCustomerDialogOpen, setIsDeleteCustomerDialogOpen] = useState(false);
   
-  // États pour les modales de marques
   const [isCreateCarBrandDialogOpen, setIsCreateCarBrandDialogOpen] = useState(false);
   const [isDeleteCarBrandDialogOpen, setIsDeleteCarBrandDialogOpen] = useState(false);
   
-  // États pour les modales de modèles
   const [isCreateCarModelDialogOpen, setIsCreateCarModelDialogOpen] = useState(false);
   const [isDeleteCarModelDialogOpen, setIsDeleteCarModelDialogOpen] = useState(false);
   
-  // États pour les modales de fournisseurs
   const [isCreateSupplierDialogOpen, setIsCreateSupplierDialogOpen] = useState(false);
   const [isDeleteSupplierDialogOpen, setIsDeleteSupplierDialogOpen] = useState(false);
   
-  // États pour les modales de plaques d'immatriculation
   const [isCreateRegistrationDialogOpen, setIsCreateRegistrationDialogOpen] = useState(false);
   const [isDeleteRegistrationDialogOpen, setIsDeleteRegistrationDialogOpen] = useState(false);
   
-  // États pour les modales de pièces
   const [isCreateItemDialogOpen, setIsCreateItemDialogOpen] = useState(false);
   const [isDeleteItemDialogOpen, setIsDeleteItemDialogOpen] = useState(false);
   
-  // États pour les marques et modèles
   const [brands, setBrands] = useState<ICarBrand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [filteredBrands, setFilteredBrands] = useState<ICarBrand[]>([]);
@@ -83,26 +77,23 @@ export default function NewOrderPage() {
   const [filteredModels, setFilteredModels] = useState<ICarModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
 
-  // États pour les fournisseurs
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<string>("");
   const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(false);
   
-  // États pour les plaques d'immatriculation
   const [registrations, setRegistrations] = useState<IRegistration[]>([]);
   const [selectedRegistration, setSelectedRegistration] = useState<string>("");
   const [isLoadingRegistrations, setIsLoadingRegistrations] = useState(false);
 
-  // États pour les pièces
   const [items, setItems] = useState<IItem[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
   
-  // États pour les pièces sélectionnées avec quantités
   const [selectedItems, setSelectedItems] = useState<Array<{ itemId: string; quantity: number; searchTerm: string }>>([]);
 
-  // États pour la recherche de compte
   const [loginSearchTerm, setLoginSearchTerm] = useState<string>("");
   const [filteredLogins, setFilteredLogins] = useState<ILogin[]>([]);
+
+  const [orderDate, setOrderDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     const loadLogins = async () => {
@@ -130,7 +121,6 @@ export default function NewOrderPage() {
     loadLogins();
   }, []);
 
-  // Filtrer les comptes selon le terme de recherche
   useEffect(() => {
     if (loginSearchTerm.trim() === "") {
       setFilteredLogins(logins);
@@ -142,7 +132,6 @@ export default function NewOrderPage() {
     }
   }, [loginSearchTerm, logins]);
 
-  // Charger les clients quand un login est sélectionné
   useEffect(() => {
     if (selectedLogin && selectedLogin !== "loading" && selectedLogin !== "none") {
       const loadCustomers = async () => {
@@ -179,7 +168,6 @@ export default function NewOrderPage() {
     }
   }, [selectedLogin]);
 
-  // Filtrer les clients selon le terme de recherche
   useEffect(() => {
     if (customerSearchTerm.trim() === "") {
       setFilteredCustomers(customers);
@@ -192,7 +180,6 @@ export default function NewOrderPage() {
     }
   }, [customerSearchTerm, customers]);
 
-  // Charger les marques au chargement de la page
   useEffect(() => {
     const loadBrands = async () => {
       setIsLoadingBrands(true);
@@ -213,7 +200,6 @@ export default function NewOrderPage() {
     loadBrands();
   }, []);
 
-  // Charger les modèles quand une marque est sélectionnée
   useEffect(() => {
     if (selectedBrand && selectedBrand !== "loading" && selectedBrand !== "none") {
       const loadModels = async () => {
@@ -233,14 +219,13 @@ export default function NewOrderPage() {
       };
 
       loadModels();
-      setSelectedModel(""); // Réinitialiser la sélection du modèle
+      setSelectedModel("");
     } else {
       setModels([]);
       setSelectedModel("");
     }
   }, [selectedBrand]);
 
-  // Charger les fournisseurs au chargement de la page
   useEffect(() => {
     const loadSuppliers = async () => {
       setIsLoadingSuppliers(true);
@@ -261,7 +246,6 @@ export default function NewOrderPage() {
     loadSuppliers();
   }, []);
 
-  // Charger les plaques d'immatriculation au chargement de la page
   useEffect(() => {
     const loadRegistrations = async () => {
       setIsLoadingRegistrations(true);
@@ -282,7 +266,6 @@ export default function NewOrderPage() {
     loadRegistrations();
   }, []);
 
-  // Charger les pièces au chargement de la page
   useEffect(() => {
     const loadItems = async () => {
       setIsLoadingItems(true);
@@ -290,14 +273,11 @@ export default function NewOrderPage() {
         const result = await ItemService.getAllItems();
         if (result && result.errorCode === ServiceErrorCode.success) {
           setItems(result.result || []);
-          // setFilteredItems(result.result || []); // This line is removed
         } else {
           setItems([]);
-          // setFilteredItems([]); // This line is removed
         }
       } catch (error) {
         setItems([]);
-        // setFilteredItems([]); // This line is removed
       } finally {
         setIsLoadingItems(false);
       }
@@ -305,26 +285,28 @@ export default function NewOrderPage() {
 
     loadItems();
     
-    // Initialiser avec un champ vide pour les pièces
     setSelectedItems([{ itemId: "", quantity: 1, searchTerm: "" }]);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-
-    
-    // Vérifier que toutes les pièces ont un itemId
     const invalidItems = selectedItems.filter(item => !item.itemId);
     if (invalidItems.length > 0) {
       ErrorService.errorMessage("Sélection requise", "Veuillez sélectionner une pièce pour tous les champs");
       return;
     }
 
+    const selectedItemIds = selectedItems.map(item => item.itemId);
+    const uniqueItemIds = new Set(selectedItemIds);
+    if (selectedItemIds.length !== uniqueItemIds.size) {
+      ErrorService.errorMessage("Pièces en double", "Vous ne pouvez pas sélectionner la même pièce plusieurs fois");
+      return;
+    }
+
     try {
-      // Étape 1 : Créer la commande principale
       const orderData = {
-        creationDate: new Date(),
+        creationDate: new Date(orderDate),
         customerId: parseInt(selectedCustomer),
         carBrandId: parseInt(selectedBrand),
         carModelId: parseInt(selectedModel),
@@ -351,7 +333,6 @@ export default function NewOrderPage() {
       const orderId = createdOrder.newOrder.id;
       console.log("Commande créée avec l'ID:", orderId);
 
-      // Étape 2 : Créer les détails de commande pour chaque pièce
       const orderDetailsPromises = selectedItems.map(async (selectedItem) => {
         const orderDetail: IOrderDetail = {
           itemId: parseInt(selectedItem.itemId),
@@ -374,7 +355,6 @@ export default function NewOrderPage() {
       console.log("Tous les détails de commande ont été créés avec succès");
       ErrorService.successMessage("Succès", "Commande créée avec succès !");
       
-      // Rediriger vers la page des commandes
       router.push("/myOrders");
       
     } catch (error) {
@@ -450,7 +430,6 @@ export default function NewOrderPage() {
                                 }
                               }}
                               onFocus={() => {
-                                // Afficher la liste déroulante
                                 const dropdown = document.getElementById('loginDropdown');
                                 if (dropdown) dropdown.classList.remove('hidden');
                               }}
@@ -462,7 +441,6 @@ export default function NewOrderPage() {
                               id="loginDropdown"
                               className="absolute z-50 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto hidden"
                               onMouseLeave={() => {
-                                // Cacher la liste quand la souris quitte
                                 setTimeout(() => {
                                   const dropdown = document.getElementById('loginDropdown');
                                   if (dropdown) dropdown.classList.add('hidden');
@@ -531,7 +509,6 @@ export default function NewOrderPage() {
                                 }
                               }}
                               onFocus={() => {
-                                // Afficher la liste déroulante
                                 const dropdown = document.getElementById('customerDropdown');
                                 if (dropdown) dropdown.classList.remove('hidden');
                               }}
@@ -543,7 +520,6 @@ export default function NewOrderPage() {
                               id="customerDropdown"
                               className="absolute z-50 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto hidden"
                               onMouseLeave={() => {
-                                // Cacher la liste quand la souris quitte
                                 setTimeout(() => {
                                   const dropdown = document.getElementById('customerDropdown');
                                   if (dropdown) dropdown.classList.add('hidden');
@@ -619,12 +595,10 @@ export default function NewOrderPage() {
                             }
                             value={selectedBrand ? brands.find(b => b.id?.toString() === selectedBrand)?.brandName || "" : ""}
                             onChange={(e) => {
-                              // Permettre la modification du texte pour la recherche
                               const searchValue = e.target.value;
                               if (searchValue === "") {
                                 setSelectedBrand("");
                               } else {
-                                // Filtrer les marques selon la recherche
                                 const filtered = brands.filter(brand => 
                                   brand.brandName.toLowerCase().includes(searchValue.toLowerCase())
                                 );
@@ -712,12 +686,10 @@ export default function NewOrderPage() {
                             }
                             value={selectedModel ? models.find(m => m.id?.toString() === selectedModel)?.modelName || "" : ""}
                             onChange={(e) => {
-                              // Permettre la modification du texte pour la recherche
                               const searchValue = e.target.value;
                               if (searchValue === "") {
                                 setSelectedModel("");
                               } else {
-                                // Filtrer les modèles selon la recherche
                                 const filtered = models.filter(model => 
                                   model.modelName.toLowerCase().includes(searchValue.toLowerCase())
                                 );
@@ -809,12 +781,10 @@ export default function NewOrderPage() {
                           }
                           value={selectedRegistration ? registrations.find(r => r.id?.toString() === selectedRegistration)?.registrationName || "" : ""}
                           onChange={(e) => {
-                            // Permettre la modification du texte pour la recherche
                             const searchValue = e.target.value;
                             if (searchValue === "") {
                               setSelectedRegistration("");
                             } else {
-                              // Recherche en temps réel
                               const filtered = registrations.filter(registration => 
                                 registration.registrationName.toLowerCase().includes(searchValue.toLowerCase())
                               );
@@ -906,7 +876,8 @@ export default function NewOrderPage() {
                           <Input
                             id="orderDate"
                             type="date"
-                            defaultValue={new Date().toISOString().split('T')[0]}
+                            value={orderDate}
+                            onChange={(e) => setOrderDate(e.target.value)}
                             className="bg-gray-700/60 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400"
                             required
                           />
@@ -923,12 +894,10 @@ export default function NewOrderPage() {
                               }
                               value={selectedSupplier ? suppliers.find(s => s.id?.toString() === selectedSupplier)?.supplierName || "" : ""}
                               onChange={(e) => {
-                                // Permettre la modification du texte pour la recherche
                                 const searchValue = e.target.value;
                                 if (searchValue === "") {
                                   setSelectedSupplier("");
                                 } else {
-                                  // Recherche en temps réel
                                   const filtered = suppliers.filter(supplier => 
                                     supplier.supplierName.toLowerCase().includes(searchValue.toLowerCase())
                                   );
@@ -1044,10 +1013,19 @@ export default function NewOrderPage() {
                                   {isLoadingItems ? (
                                     <div className="px-3 py-2 text-gray-400 text-sm">Chargement des pièces...</div>
                                   ) : (() => {
-                                    // Filtrer les pièces selon le terme de recherche de ce champ spécifique
                                     const searchTerm = selectedItem.searchTerm.trim();
+
+                                    const selectedItemIds = selectedItems
+                                      .filter((item, i) => i !== index && item.itemId)
+                                      .map(item => item.itemId)
+                                      .filter(id => id !== undefined && id !== "");
+                                    
+                                    let availableItems = items.filter(item => 
+                                      item.id && !selectedItemIds.includes(item.id.toString())
+                                    );
+                                    
                                     if (searchTerm === "") {
-                                      return items.map(item => (
+                                      return availableItems.map(item => (
                                         <div
                                           key={item.id}
                                           className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
@@ -1064,11 +1042,11 @@ export default function NewOrderPage() {
                                         </div>
                                       ));
                                     } else {
-                                      const filtered = items.filter(item => 
+                                      const filtered = availableItems.filter(item => 
                                         item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
                                       );
                                       if (filtered.length === 0) {
-                                        return <div className="px-3 py-2 text-gray-400 text-sm">Aucune pièce trouvée</div>;
+                                        return <div className="px-3 py-2 text-gray-400 text-sm">Aucune pièce disponible</div>;
                                       }
                                       return filtered.map(item => (
                                         <div
@@ -1231,7 +1209,6 @@ export default function NewOrderPage() {
             };
             loadCustomers();
           }
-          // Réinitialiser la sélection du client après suppression
           setSelectedCustomer("");
           setCustomerSearchTerm("");
         }}
@@ -1241,7 +1218,6 @@ export default function NewOrderPage() {
         isOpen={isCreateCarBrandDialogOpen}
         onClose={() => setIsCreateCarBrandDialogOpen(false)}
         onCarBrandCreated={() => {
-          // Recharger les marques après création
           const loadBrands = async () => {
             setIsLoadingBrands(true);
             try {
@@ -1263,7 +1239,6 @@ export default function NewOrderPage() {
         isOpen={isDeleteCarBrandDialogOpen}
         onClose={() => setIsDeleteCarBrandDialogOpen(false)}
         onCarBrandDeleted={() => {
-          // Recharger les marques après suppression
           const loadBrands = async () => {
             setIsLoadingBrands(true);
             try {
@@ -1278,7 +1253,6 @@ export default function NewOrderPage() {
             }
           };
           loadBrands();
-          // Réinitialiser la sélection de marque et modèle
           setSelectedBrand("");
           setSelectedModel("");
         }}
@@ -1291,7 +1265,6 @@ export default function NewOrderPage() {
         brandId={parseInt(selectedBrand)}
         brandName={brands.find(b => b.id?.toString() === selectedBrand)?.brandName || ""}
         onCarModelCreated={() => {
-          // Recharger les modèles après création
           if (selectedBrand && selectedBrand !== "loading" && selectedBrand !== "none") {
             const loadModels = async () => {
               setIsLoadingModels(true);
@@ -1316,7 +1289,6 @@ export default function NewOrderPage() {
         isOpen={isDeleteCarModelDialogOpen}
         onClose={() => setIsDeleteCarModelDialogOpen(false)}
         onCarModelDeleted={() => {
-          // Recharger les modèles après suppression
           if (selectedBrand && selectedBrand !== "loading" && selectedBrand !== "none") {
             const loadModels = async () => {
               setIsLoadingModels(true);
@@ -1333,7 +1305,6 @@ export default function NewOrderPage() {
             };
             loadModels();
           }
-          // Réinitialiser la sélection du modèle
           setSelectedModel("");
         }}
         carModel={models.find(m => m.id?.toString() === selectedModel) || null}
@@ -1343,14 +1314,12 @@ export default function NewOrderPage() {
         isOpen={isCreateSupplierDialogOpen}
         onClose={() => setIsCreateSupplierDialogOpen(false)}
         onSupplierCreated={() => {
-          // Recharger les fournisseurs après création
           const loadSuppliers = async () => {
             setIsLoadingSuppliers(true);
             try {
               const result = await SupplierService.getAllSuppliers();
               if (result && result.errorCode === ServiceErrorCode.success) {
                 setSuppliers(result.result || []);
-                // setFilteredSuppliers(result.result || []); // This line is removed
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des fournisseurs:", error);
@@ -1366,14 +1335,12 @@ export default function NewOrderPage() {
         isOpen={isDeleteSupplierDialogOpen}
         onClose={() => setIsDeleteSupplierDialogOpen(false)}
         onSupplierDeleted={() => {
-          // Recharger les fournisseurs après suppression
           const loadSuppliers = async () => {
             setIsLoadingSuppliers(true);
             try {
               const result = await SupplierService.getAllSuppliers();
               if (result && result.errorCode === ServiceErrorCode.success) {
                 setSuppliers(result.result || []);
-                // setFilteredSuppliers(result.result || []); // This line is removed
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des fournisseurs:", error);
@@ -1382,9 +1349,7 @@ export default function NewOrderPage() {
             }
           };
           loadSuppliers();
-          // Réinitialiser la sélection du fournisseur
           setSelectedSupplier("");
-          // setSupplierSearchTerm(""); // This line is removed
         }}
         supplier={suppliers.find(s => s.id?.toString() === selectedSupplier) || null}
       />
@@ -1393,14 +1358,12 @@ export default function NewOrderPage() {
         isOpen={isCreateRegistrationDialogOpen}
         onClose={() => setIsCreateRegistrationDialogOpen(false)}
         onRegistrationCreated={() => {
-          // Recharger les plaques d'immatriculation après création
           const loadRegistrations = async () => {
             setIsLoadingRegistrations(true);
             try {
               const result = await RegistrationService.getAllRegistrations();
               if (result && result.errorCode === ServiceErrorCode.success) {
                 setRegistrations(result.result || []);
-                // setFilteredRegistrations(result.result || []); // This line is removed
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des plaques:", error);
@@ -1416,14 +1379,12 @@ export default function NewOrderPage() {
         isOpen={isDeleteRegistrationDialogOpen}
         onClose={() => setIsDeleteRegistrationDialogOpen(false)}
         onRegistrationDeleted={() => {
-          // Recharger les plaques d'immatriculation après suppression
           const loadRegistrations = async () => {
             setIsLoadingRegistrations(true);
             try {
               const result = await RegistrationService.getAllRegistrations();
               if (result && result.errorCode === ServiceErrorCode.success) {
                 setRegistrations(result.result || []);
-                // setFilteredRegistrations(result.result || []); // This line is removed
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des plaques:", error);
@@ -1432,9 +1393,7 @@ export default function NewOrderPage() {
             }
           };
           loadRegistrations();
-          // Réinitialiser la sélection de la plaque
           setSelectedRegistration("");
-          // setRegistrationSearchTerm(""); // This line is removed
         }}
         registration={registrations.find(r => r.id?.toString() === selectedRegistration) || null}
       />
@@ -1443,14 +1402,12 @@ export default function NewOrderPage() {
         isOpen={isCreateItemDialogOpen}
         onClose={() => setIsCreateItemDialogOpen(false)}
         onItemCreated={() => {
-          // Recharger les pièces après création
           const loadItems = async () => {
             setIsLoadingItems(true);
             try {
               const result = await ItemService.getAllItems();
               if (result && result.errorCode === ServiceErrorCode.success) {
                 setItems(result.result || []);
-                // setFilteredItems(result.result || []); // This line is removed
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des pièces:", error);
@@ -1466,14 +1423,12 @@ export default function NewOrderPage() {
         isOpen={isDeleteItemDialogOpen}
         onClose={() => setIsDeleteItemDialogOpen(false)}
         onItemDeleted={() => {
-          // Recharger les pièces après suppression
           const loadItems = async () => {
             setIsLoadingItems(true);
             try {
               const result = await ItemService.getAllItems();
               if (result && result.errorCode === ServiceErrorCode.success) {
                 setItems(result.result || []);
-                // setFilteredItems([]); // This line is removed
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des pièces:", error);
