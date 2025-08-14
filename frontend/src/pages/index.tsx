@@ -11,6 +11,8 @@ import { useState, useEffect } from "react"
 import { ErrorService } from "@/services/error.service"
 import { ServiceErrorCode } from "@/services/service.result"
 import OrderService from "@/services/order.service"
+import LoanerCarService from "@/services/loaner-car.service"
+import LoanService from "@/services/loan.service"
 import { IOrderExtended } from "@/models/order.model"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts'
 
@@ -18,7 +20,8 @@ export default function HomePage() {
   const router = useRouter();
   const [orders, setOrders] = useState<IOrderExtended[]>([]);
   const [ordersByAccount, setOrdersByAccount] = useState<any[]>([]);
-  const [totalSuppliers, setTotalSuppliers] = useState<number>(0);
+  const [totalAvailableLoanerCars, setTotalAvailableLoanerCars] = useState<number>(0);
+  const [totalLoanedCars, setTotalLoanedCars] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
@@ -32,12 +35,16 @@ export default function HomePage() {
         }
 
         try {
-          const suppliersResult = await OrderService.getUniqueSuppliers();
-          if (suppliersResult && suppliersResult.errorCode === ServiceErrorCode.success) {
-            setTotalSuppliers(suppliersResult.result || 0);
+          const loanerCarsResult = await LoanerCarService.getAllLoanerCars();
+          if (loanerCarsResult && loanerCarsResult.errorCode === ServiceErrorCode.success) {
+            const loanerCars = loanerCarsResult.result || [];
+            const availableCars = loanerCars.filter(car => car.status === 'DISPONIBLE').length;
+            const loanedCars = loanerCars.filter(car => car.status === 'EN_PRET').length;
+            setTotalAvailableLoanerCars(availableCars);
+            setTotalLoanedCars(loanedCars);
           }
         } catch (error) {
-          console.error("Erreur lors du chargement des fournisseurs:", error);
+          console.error("Erreur lors du chargement des véhicules de prêt:", error);
         }
 
       } catch (error) {
@@ -201,13 +208,13 @@ export default function HomePage() {
             <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold text-gray-200">Total Véhicules</CardTitle>
+                  <CardTitle className="text-base font-semibold text-gray-200">Total Véhicules de Prêt Disponibles</CardTitle>
                   <Car className="w-6 h-6 text-purple-400" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-white">{totalVehicles}</div>
-                <p className="text-xs text-gray-400 mt-1">Véhicules différents</p>
+                <div className="text-3xl font-bold text-white">{totalAvailableLoanerCars}</div>
+                <p className="text-xs text-gray-400 mt-1">Véhicules disponibles pour prêt</p>
               </CardContent>
             </Card>
 
@@ -215,13 +222,13 @@ export default function HomePage() {
             <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold text-gray-200">Total Fournisseurs</CardTitle>
+                  <CardTitle className="text-base font-semibold text-gray-200">Total Véhicules Prétés</CardTitle>
                   <TrendingUp className="w-6 h-6 text-orange-400" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-white">{totalSuppliers}</div>
-                <p className="text-xs text-gray-400 mt-1">Fournisseurs uniques</p>
+                <div className="text-3xl font-bold text-white">{totalLoanedCars}</div>
+                <p className="text-xs text-gray-400 mt-1">Véhicules actuellement prétés</p>
               </CardContent>
             </Card>
           </motion.div>
