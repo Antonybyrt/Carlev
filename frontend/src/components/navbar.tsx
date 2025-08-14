@@ -69,7 +69,7 @@ export function Navbar() {
 
           {/* Navigation Items */}
           <div className="flex items-center space-x-4">
-            {/* Bouton Nouvelle Commande */}
+            {/* Groupe 1: Nouvelle Commande */}
             <motion.div whileHover={{ scale: 1.05 }}>
               <Button
                 onClick={() => router.push("/newOrder")}
@@ -82,7 +82,7 @@ export function Navbar() {
               </Button>
             </motion.div>
 
-            {/* Bouton Mes Commandes */}
+            {/* Groupe 2: Mes Commandes */}
             <motion.div whileHover={{ scale: 1.05 }}>
               <Button
                 onClick={() => router.push("/myOrders")}
@@ -95,19 +95,32 @@ export function Navbar() {
               </Button>
             </motion.div>
 
-            {/* Bouton Déconnexion */}
+            {/* Groupe 3: Voitures de Prêt */}
             <motion.div whileHover={{ scale: 1.05 }}>
               <Button
-                onClick={handleLogout}
+                onClick={() => router.push("/loanerCar")}
                 variant="outline"
                 size="sm"
-                className="flex items-center space-x-2 text-gray-300 hover:text-red-400 border-gray-600/50 hover:border-red-400/70 bg-transparent hover:bg-red-400/10 backdrop-blur-sm"
+                className="flex items-center space-x-2 text-gray-300 hover:text-purple-400 border-gray-600/50 hover:border-purple-400/70 bg-transparent hover:bg-purple-400/10 backdrop-blur-sm"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Déconnexion</span>
+                <Car className="w-4 h-4" />
+                <span>Voitures de Prêt</span>
               </Button>
             </motion.div>
           </div>
+
+          {/* Groupe 3: Déconnexion (tout à droite, séparé) */}
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2 text-gray-300 hover:text-red-400 border-gray-600/50 hover:border-red-400/70 bg-transparent hover:bg-red-400/10 backdrop-blur-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Déconnexion</span>
+            </Button>
+          </motion.div>
         </div>
       </div>
     </motion.nav>

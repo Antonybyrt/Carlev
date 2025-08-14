@@ -6,9 +6,9 @@ const sequelize = new Sequelize('Carlev', process.env.DATABASE_USERNAME as strin
     host: process.env.HOST,
     port: Number(process.env.PORT),
     dialect: 'mysql',
-    // dialectOptions: {
-    //     socketPath: '/Applications/MAMP/tmp/mysql/mysql.sock',
-    // },
+    dialectOptions: {
+        socketPath: '/Applications/MAMP/tmp/mysql/mysql.sock',
+    },
 });
 
 export default sequelize;

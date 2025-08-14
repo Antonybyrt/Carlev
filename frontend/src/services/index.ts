@@ -14,6 +14,9 @@ export { default as ItemService } from './item.service';
 
 export { default as RegistrationService } from './registration.service';
 
+export { default as LoanerCarService } from './loaner-car.service';
+export { default as LoanService } from './loan.service';
+
 export { ApiService } from './api.service';
 export { ErrorService } from './error.service';
 

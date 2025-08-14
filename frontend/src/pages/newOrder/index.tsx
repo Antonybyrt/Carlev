@@ -18,12 +18,10 @@ import { ErrorService } from "@/services/error.service"
 import { ServiceErrorCode } from "@/services/service.result"
 import CustomerService from "@/services/customer.service"
 import { ICustomer } from "@/models/customer.model"
-import { CreateCustomerDialog, DeleteCustomerDialog } from "@/components/dialog"
-import { CreateCarBrandDialog, DeleteCarBrandDialog } from "@/components/dialog"
-import { CreateCarModelDialog, DeleteCarModelDialog } from "@/components/dialog"
-import { CreateSupplierDialog, DeleteSupplierDialog } from "@/components/dialog"
-import { CreateRegistrationDialog, DeleteRegistrationDialog } from "@/components/dialog"
-import { CreateItemDialog, DeleteItemDialog } from "@/components/dialog"
+import { CreateCustomerDialog, DeleteCustomerDialog, CreateCarBrandDialog, DeleteCarBrandDialog,
+  CreateCarModelDialog, DeleteCarModelDialog, CreateSupplierDialog, DeleteSupplierDialog,
+  CreateRegistrationDialog, DeleteRegistrationDialog, CreateItemDialog, DeleteItemDialog
+ } from "@/components/dialog"
 import { ICarBrand } from "@/models/car-brand.model"
 import { ICarModel } from "@/models/car-model.model"
 import CarBrandService from "@/services/car-brand.service"

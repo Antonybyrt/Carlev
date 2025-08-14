@@ -13,6 +13,8 @@
 - **Inventaire** : Gestion des articles et pièces disponibles
 - **Comptes Utilisateurs** : Système d'authentification et de sessions
 - **Statistiques** : Compteurs et rapports par compte
+- **Voitures de Prêt** : Gestion du parc de véhicules de prêt
+- **Système de Prêts** : Suivi des prêts de véhicules aux clients
 
 ## 🏗️ Architecture Technique
 
@@ -40,6 +42,8 @@
 - **Order** : Commandes de pièces
 - **Item** : Articles/pièces disponibles
 - **OrderDetail** : Détails des commandes
+- **LoanerCar** : Voitures de prêt disponibles
+- **Loan** : Historique des prêts de véhicules
 
 ## 🔐 Système d'Authentification
 
@@ -134,6 +138,86 @@ DELETE /supplier/:id       - Supprimer un fournisseur
 GET    /supplier/count     - Nombre total de fournisseurs
 ```
 
+### Voitures de Prêt
+
+#### Routes disponibles :
+- `GET /loaner_car` - Récupérer toutes les voitures de prêt
+- `GET /loaner_car/:id` - Récupérer une voiture de prêt par ID
+- `POST /loaner_car` - Créer une nouvelle voiture de prêt
+- `PATCH /loaner_car/:id` - Archiver une voiture de prêt (soft delete)
+- `PUT /loaner_car/:id` - Mettre à jour une voiture de prêt
+
+#### Exemple de données pour la création :
+```json
+{
+  "carBrandId": 1,
+  "carModelId": 1,
+  "registrationId": 1,
+  "status": "DISPONIBLE"
+}
+```
+
+#### Exemple de données pour la mise à jour :
+```json
+{
+  "carBrandId": 2,
+  "carModelId": 3,
+  "registrationId": 5,
+  "status": "EN_PRET"
+}
+```
+
+### 📋 Système de Prêts
+```
+GET    /loan                       - Liste de tous les prêts
+GET    /loan/:id                   - Récupérer un prêt spécifique
+POST   /loan                       - Créer un nouveau prêt
+DELETE /loan/:id                   - Supprimer un prêt
+```
+
+## Loan Routes
+
+### GET /loan/
+- **Description**: Récupère tous les prêts
+- **Réponse**: Liste des prêts avec associations
+
+### GET /loan/:id
+- **Description**: Récupère un prêt par ID
+- **Paramètres**: `id` (number)
+- **Réponse**: Prêt avec associations
+
+### POST /loan/
+- **Description**: Crée un nouveau prêt
+- **Body**: 
+  ```json
+  {
+    "loanerCarId": 1,
+    "customerId": 1,
+    "orNumber": 12345,
+    "startDate": "2024-01-15",
+    "endDate": "2024-01-20",
+    "notes": "Prêt pour réparation"
+  }
+  ```
+- **Réponse**: Prêt créé
+
+### PUT /loan/:id
+- **Description**: Met à jour un prêt existant
+- **Paramètres**: `id` (number)
+- **Body**: Champs à mettre à jour (partiels)
+  ```json
+  {
+    "endDate": "2024-01-18",
+    "notes": "Prêt prolongé"
+  }
+  ```
+- **Réponse**: Prêt mis à jour avec associations
+
+### DELETE /loan/:id
+- **Description**: Supprime un prêt
+- **Paramètres**: `id` (number)
+- **Réponse**: Confirmation de suppression
+
 ## 🔧 Structure des Données
 
 ### Exemple de Commande
@@ -158,6 +242,28 @@ GET    /supplier/count     - Nombre total de fournisseurs
 }
 ```
 
+### Exemple de Voiture de Prêt
+```json
+{
+  "carBrandId": 2,
+  "carModelId": 5,
+  "registrationId": 1,
+  "status": "disponible"
+}
+```
+
+### Exemple de Prêt
+```json
+{
+  "loanerCarId": 1,
+  "orNumber": 12345,
+  "customerId": 1,
+  "startDate": "2024-01-15T10:00:00Z",
+  "endDate": "2024-01-20T18:00:00Z",
+  "notes": "Prêt pour réparation carrosserie"
+}
+```
+
 ## 📊 Fonctionnalités Avancées
 
 - **Gestion des Relations** : Liens automatiques entre entités
@@ -165,6 +271,8 @@ GET    /supplier/count     - Nombre total de fournisseurs
 - **Gestion d'Erreurs** : Codes d'erreur standardisés
 - **Sécurité** : Sessions utilisateur et authentification
 - **Performance** : Requêtes optimisées avec Sequelize
+- **Gestion des Prêts** : Suivi complet des véhicules prêtés aux clients
+- **Statut des Véhicules** : Suivi de la disponibilité des voitures de prêt
 
 ## 🎯 Cas d'Usage
 
@@ -172,6 +280,8 @@ GET    /supplier/count     - Nombre total de fournisseurs
 2. **Gestionnaire** : Suivre les commandes et gérer les fournisseurs
 3. **Comptable** : Consulter les statistiques par compte
 4. **Technicien** : Identifier rapidement les pièces nécessaires
+5. **Responsable de Flotte** : Gérer le parc de véhicules de prêt
+6. **Accueil** : Organiser les prêts de véhicules aux clients
 
 ## 📝 Licence
 

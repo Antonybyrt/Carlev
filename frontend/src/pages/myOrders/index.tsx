@@ -30,6 +30,9 @@ export default function MyOrdersPage() {
   const [isDeleteOrderDialogOpen, setIsDeleteOrderDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<IOrderExtended | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+
   useEffect(() => {
     const loadOrders = async () => {
       try {
@@ -144,6 +147,41 @@ export default function MyOrdersPage() {
       return { text: "Ancienne", color: "text-gray-400", bgColor: "bg-gray-500/20", borderColor: "border-gray-500/30" };
     }
   };
+
+  
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentOrders = filteredOrders.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToFirstPage = () => {
+    setCurrentPage(1);
+  };
+
+  const goToLastPage = () => {
+    setCurrentPage(totalPages);
+  };
+
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredOrders]);
 
   return (
     <AuthGuard>
@@ -302,7 +340,7 @@ export default function MyOrdersPage() {
                 </CardContent>
               </Card>
             ) : (
-              filteredOrders.map((order, index) => (
+              currentOrders.map((order, index) => (
                 <motion.div
                   key={order.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -483,6 +521,102 @@ export default function MyOrdersPage() {
                   </Card>
                 </motion.div>
               ))
+            )}
+            
+            {/* Pagination */}
+            {filteredOrders.length > itemsPerPage && (
+              <div className="mt-6 flex items-center justify-center space-x-2">
+                {/* Bouton Première Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToFirstPage}
+                  disabled={currentPage === 1}
+                  className="border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Première
+                </Button>
+                
+                {/* Bouton Page Précédente */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                  className="border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Précédente
+                </Button>
+                
+                {/* Numéros de Pages */}
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: totalPages }, (_, index) => {
+                    const pageNumber = index + 1;
+                    
+                    if (
+                      pageNumber === 1 ||
+                      pageNumber === totalPages ||
+                      (pageNumber >= currentPage - 2 && pageNumber <= currentPage + 2)
+                    ) {
+                      return (
+                        <Button
+                          key={pageNumber}
+                          variant={currentPage === pageNumber ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(pageNumber)}
+                          className={
+                            currentPage === pageNumber
+                              ? "bg-blue-600 hover:bg-blue-700 text-white"
+                              : "border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10"
+                          }
+                        >
+                          {pageNumber}
+                        </Button>
+                      );
+                    } else if (
+                      pageNumber === currentPage - 3 ||
+                      pageNumber === currentPage + 3
+                    ) {
+                      return (
+                        <span key={pageNumber} className="px-2 text-gray-400">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+                
+                {/* Bouton Page Suivante */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                  className="border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Suivante
+                </Button>
+                
+                {/* Bouton Dernière Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToLastPage}
+                  disabled={currentPage === totalPages}
+                  className="border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Dernière
+                </Button>
+              </div>
+            )}
+            
+            {/* Informations de pagination */}
+            {filteredOrders.length > 0 && (
+              <div className="mt-4 text-center text-sm text-gray-400">
+                Affichage de {startIndex + 1} à {Math.min(endIndex, filteredOrders.length)} sur {filteredOrders.length} commandes
+                {totalPages > 1 && ` • Page ${currentPage} sur ${totalPages}`}
+              </div>
             )}
           </motion.div>
         </main>
