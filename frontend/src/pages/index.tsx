@@ -208,7 +208,7 @@ export default function HomePage() {
             <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold text-gray-200">Total Véhicules de Prêt Disponibles</CardTitle>
+                  <CardTitle className="text-base font-semibold text-gray-200">Véhicules Disponibles</CardTitle>
                   <Car className="w-6 h-6 text-purple-400" />
                 </div>
               </CardHeader>
@@ -222,7 +222,7 @@ export default function HomePage() {
             <Card className="bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold text-gray-200">Total Véhicules Prétés</CardTitle>
+                  <CardTitle className="text-base font-semibold text-gray-200">Véhicules Prétés</CardTitle>
                   <TrendingUp className="w-6 h-6 text-orange-400" />
                 </div>
               </CardHeader>
