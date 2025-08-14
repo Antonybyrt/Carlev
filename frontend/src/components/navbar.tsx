@@ -69,34 +69,20 @@ export function Navbar() {
 
           {/* Navigation Items */}
           <div className="flex items-center space-x-4">
-            {/* Groupe 1: Nouvelle Commande + Voitures de Prêt */}
-            <div className="flex items-center space-x-2">
-              <motion.div whileHover={{ scale: 1.05 }}>
-                <Button
-                  onClick={() => router.push("/newOrder")}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center space-x-2 text-gray-300 hover:text-blue-400 border-gray-600/50 hover:border-blue-400/70 bg-transparent hover:bg-blue-400/10 backdrop-blur-sm"
-                >
-                  <Package className="w-4 h-4" />
-                  <span>Nouvelle Commande</span>
-                </Button>
-              </motion.div>
+            {/* Groupe 1: Nouvelle Commande */}
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <Button
+                onClick={() => router.push("/newOrder")}
+                variant="outline"
+                size="sm"
+                className="flex items-center space-x-2 text-gray-300 hover:text-blue-400 border-gray-600/50 hover:border-blue-400/70 bg-transparent hover:bg-blue-400/10 backdrop-blur-sm"
+              >
+                <Package className="w-4 h-4" />
+                <span>Nouvelle Commande</span>
+              </Button>
+            </motion.div>
 
-              <motion.div whileHover={{ scale: 1.05 }}>
-                <Button
-                  onClick={() => router.push("/loanerCar")}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center space-x-2 text-gray-300 hover:text-purple-400 border-gray-600/50 hover:border-purple-400/70 bg-transparent hover:bg-purple-400/10 backdrop-blur-sm"
-                >
-                  <Car className="w-4 h-4" />
-                  <span>Voitures de Prêt</span>
-                </Button>
-              </motion.div>
-            </div>
-
-            {/* Groupe 2: Mes Commandes (seul) */}
+            {/* Groupe 2: Mes Commandes */}
             <motion.div whileHover={{ scale: 1.05 }}>
               <Button
                 onClick={() => router.push("/myOrders")}
@@ -106,6 +92,19 @@ export function Navbar() {
               >
                 <FileText className="w-4 h-4" />
                 <span>Mes Commandes</span>
+              </Button>
+            </motion.div>
+
+            {/* Groupe 3: Voitures de Prêt */}
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <Button
+                onClick={() => router.push("/loanerCar")}
+                variant="outline"
+                size="sm"
+                className="flex items-center space-x-2 text-gray-300 hover:text-purple-400 border-gray-600/50 hover:border-purple-400/70 bg-transparent hover:bg-purple-400/10 backdrop-blur-sm"
+              >
+                <Car className="w-4 h-4" />
+                <span>Voitures de Prêt</span>
               </Button>
             </motion.div>
           </div>

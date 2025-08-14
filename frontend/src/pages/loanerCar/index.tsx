@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Car, Plus, Trash2, Archive, Search } from "lucide-react"
+import { Car, Plus, Trash2, Archive, Search, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,10 +13,9 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { ErrorService } from "@/services/error.service"
 import { ServiceErrorCode } from "@/services/service.result"
-import { CreateCarBrandDialog, DeleteCarBrandDialog } from "@/components/dialog"
-import { CreateCarModelDialog, DeleteCarModelDialog } from "@/components/dialog"
-import { CreateRegistrationDialog, DeleteRegistrationDialog } from "@/components/dialog"
-import { ArchiveLoanerCarDialog } from "@/components/dialog"
+import { CreateCarBrandDialog, DeleteCarBrandDialog, CreateRegistrationDialog, DeleteRegistrationDialog,
+  CreateCarModelDialog, DeleteCarModelDialog, ArchiveLoanerCarDialog
+} from "@/components/dialog"
 import { ICarBrand } from "@/models/car-brand.model"
 import { ICarModel } from "@/models/car-model.model"
 import { IRegistration } from "@/models/registration.model"
@@ -25,44 +24,40 @@ import CarBrandService from "@/services/car-brand.service"
 import CarModelService from "@/services/car-model.service"
 import RegistrationService from "@/services/registration.service"
 import LoanerCarService from "@/services/loaner-car.service"
+import LoanService from "@/services/loan.service"
 
 export default function LoanerCarPage() {
   const router = useRouter();
   
-  // États pour les marques
   const [brands, setBrands] = useState<ICarBrand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [filteredBrands, setFilteredBrands] = useState<ICarBrand[]>([]);
   const [isLoadingBrands, setIsLoadingBrands] = useState(false);
   
-  // États pour les modèles
   const [models, setModels] = useState<ICarModel[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [filteredModels, setFilteredModels] = useState<ICarModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
 
-  // États pour les plaques d'immatriculation
   const [registrations, setRegistrations] = useState<IRegistration[]>([]);
   const [selectedRegistration, setSelectedRegistration] = useState<string>("");
   const [filteredRegistrations, setFilteredRegistrations] = useState<IRegistration[]>([]);
   const [isLoadingRegistrations, setIsLoadingRegistrations] = useState(false);
 
-  // États pour le statut
   const [status, setStatus] = useState<string>("DISPONIBLE");
 
-  // États pour la liste des voitures de prêt
   const [loanerCars, setLoanerCars] = useState<any[]>([]);
   const [filteredLoanerCars, setFilteredLoanerCars] = useState<any[]>([]);
   const [isLoadingLoanerCars, setIsLoadingLoanerCars] = useState(false);
 
-  // États pour la pagination
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(4);
 
-  // État pour afficher/masquer le formulaire de création
+  
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // États pour les dialogues
+  
   const [isCreateCarBrandDialogOpen, setIsCreateCarBrandDialogOpen] = useState(false);
   const [isDeleteCarBrandDialogOpen, setIsDeleteCarBrandDialogOpen] = useState(false);
   const [isCreateCarModelDialogOpen, setIsCreateCarModelDialogOpen] = useState(false);
@@ -72,17 +67,17 @@ export default function LoanerCarPage() {
   const [isDeleteLoanerCarDialogOpen, setIsDeleteLoanerCarDialogOpen] = useState(false);
   const [loanerCarToArchive, setLoanerCarToArchive] = useState<any>(null);
 
-  // États pour la recherche
+  
   const [brandSearchTerm, setBrandSearchTerm] = useState<string>("");
   const [modelSearchTerm, setModelSearchTerm] = useState<string>("");
   const [registrationSearchTerm, setRegistrationSearchTerm] = useState<string>("");
 
-  // États pour la recherche des voitures de prêt
+  
   const [searchStatus, setSearchStatus] = useState<string>("ALL");
   const [searchModel, setSearchModel] = useState<string>("");
   const [searchPlate, setSearchPlate] = useState<string>("");
 
-  // Chargement des marques
+  
   useEffect(() => {
     const loadBrands = async () => {
       setIsLoadingBrands(true);
@@ -103,7 +98,7 @@ export default function LoanerCarPage() {
     loadBrands();
   }, []);
 
-  // Chargement des modèles quand une marque est sélectionnée
+  
   useEffect(() => {
     if (selectedBrand && selectedBrand !== "loading" && selectedBrand !== "none") {
       const loadModels = async () => {
@@ -130,7 +125,7 @@ export default function LoanerCarPage() {
     }
   }, [selectedBrand]);
 
-  // Chargement des plaques d'immatriculation
+  
   useEffect(() => {
     const loadRegistrations = async () => {
       setIsLoadingRegistrations(true);
@@ -151,7 +146,7 @@ export default function LoanerCarPage() {
     loadRegistrations();
   }, []);
 
-  // Chargement des voitures de prêt
+  
   useEffect(() => {
     const loadLoanerCars = async () => {
       setIsLoadingLoanerCars(true);
@@ -159,7 +154,7 @@ export default function LoanerCarPage() {
         const result = await LoanerCarService.getAllLoanerCars();
         if (result && result.errorCode === ServiceErrorCode.success) {
           setLoanerCars(result.result || []);
-          setFilteredLoanerCars(result.result || []); // Initialize filteredLoanerCars
+          setFilteredLoanerCars(result.result || []); 
         } else {
           setLoanerCars([]);
           setFilteredLoanerCars([]);
@@ -175,35 +170,109 @@ export default function LoanerCarPage() {
     loadLoanerCars();
   }, []);
 
-  // Filtrage des voitures de prêt selon les critères de recherche
+  useEffect(() => {
+    const verifyLoanerCarStatuses = async () => {
+      try {
+        const loansResult = await LoanService.getAllLoans();
+        if (!loansResult || loansResult.errorCode !== ServiceErrorCode.success) {
+          return;
+        }
+
+        const allLoans = loansResult.result || [];
+        const now = new Date();
+
+        for (const loanerCar of loanerCars) {
+          if (loanerCar.status === 'EN_PRET') {
+            const hasActiveLoan = allLoans.some(loan => {
+              if (loan.loanerCarId === loanerCar.id) {
+                const startDate = new Date(loan.startDate);
+                const endDate = new Date(loan.endDate);
+                return startDate <= now && now <= endDate;
+              }
+              return false;
+            });
+
+            if (!hasActiveLoan) {
+              try {
+                await LoanerCarService.updateLoanerCar(loanerCar.id!, { status: 'DISPONIBLE' });
+                console.log(`Voiture ${loanerCar.id} mise en DISPONIBLE (pas de prêt actif)`);
+                
+                setLoanerCars(prev => prev.map(car => 
+                  car.id === loanerCar.id ? { ...car, status: 'DISPONIBLE' } : car
+                ));
+                setFilteredLoanerCars(prev => prev.map(car => 
+                  car.id === loanerCar.id ? { ...car, status: 'DISPONIBLE' } : car
+                ));
+              } catch (error) {
+                console.error(`Erreur lors de la mise à jour du statut de la voiture ${loanerCar.id}:`, error);
+              }
+            }
+          } else if (loanerCar.status === 'DISPONIBLE') {
+            const hasActiveLoan = allLoans.some(loan => {
+              if (loan.loanerCarId === loanerCar.id) {
+                const startDate = new Date(loan.startDate);
+                const endDate = new Date(loan.endDate);
+                return startDate <= now && now <= endDate;
+              }
+              return false;
+            });
+
+            if (hasActiveLoan) {
+              try {
+                await LoanerCarService.updateLoanerCar(loanerCar.id!, { status: 'EN_PRET' });
+                console.log(`Voiture ${loanerCar.id} mise en EN_PRET (prêt actif détecté)`);
+                
+                setLoanerCars(prev => prev.map(car => 
+                  car.id === loanerCar.id ? { ...car, status: 'EN_PRET' } : car
+                ));
+                setFilteredLoanerCars(prev => prev.map(car => 
+                  car.id === loanerCar.id ? { ...car, status: 'EN_PRET' } : car
+                ));
+              } catch (error) {
+                console.error(`Erreur lors de la mise à jour du statut de la voiture ${loanerCar.id}:`, error);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification des statuts des voitures de prêt:", error);
+      }
+    };
+
+    if (loanerCars.length > 0) {
+      verifyLoanerCarStatuses();
+    }
+  }, [loanerCars]);
+
+
   useEffect(() => {
     let filtered = loanerCars;
 
-    // Filtre par statut
+    
     if (searchStatus !== "ALL") {
       filtered = filtered.filter(car => car.status === searchStatus);
     }
 
-    // Filtre par modèle
+    
     if (searchModel.trim()) {
       filtered = filtered.filter(car => 
         car.model?.modelName?.toLowerCase().includes(searchModel.toLowerCase())
       );
     }
 
-    // Filtre par plaque d'immatriculation
+    
     if (searchPlate.trim()) {
       filtered = filtered.filter(car => 
         car.registration?.registrationName?.toLowerCase().includes(searchPlate.toLowerCase())
       );
     }
 
-    // Mettre à jour la pagination quand les filtres changent
+    
     setCurrentPage(1);
     setFilteredLoanerCars(filtered);
   }, [loanerCars, searchStatus, searchModel, searchPlate]);
 
-  // Filtrage des marques
+  
   useEffect(() => {
     if (brandSearchTerm) {
       const filtered = brands.filter(brand => 
@@ -215,7 +284,7 @@ export default function LoanerCarPage() {
     }
   }, [brandSearchTerm, brands]);
 
-  // Filtrage des modèles
+  
   useEffect(() => {
     if (modelSearchTerm) {
       const filtered = models.filter(model => 
@@ -227,7 +296,7 @@ export default function LoanerCarPage() {
     }
   }, [modelSearchTerm, models]);
 
-  // Filtrage des plaques
+  
   useEffect(() => {
     if (registrationSearchTerm) {
       const filtered = registrations.filter(registration => 
@@ -266,7 +335,7 @@ export default function LoanerCarPage() {
       console.log("Voiture de prêt créée avec succès:", result.result);
       ErrorService.successMessage("Succès", "Voiture de prêt créée avec succès !");
       
-      // Réinitialisation du formulaire
+      
       setSelectedBrand("");
       setSelectedModel("");
       setSelectedRegistration("");
@@ -275,16 +344,16 @@ export default function LoanerCarPage() {
       setModelSearchTerm("");
       setRegistrationSearchTerm("");
       
-      // Fermer le formulaire
+      
       setShowCreateForm(false);
       
-      // Recharger la liste des voitures de prêt
+      
       const loadLoanerCars = async () => {
         try {
           const result = await LoanerCarService.getAllLoanerCars();
           if (result && result.errorCode === ServiceErrorCode.success) {
             setLoanerCars(result.result || []);
-            setFilteredLoanerCars(result.result || []); // Re-initialize filteredLoanerCars
+            setFilteredLoanerCars(result.result || []); 
           }
         } catch (error) {
           console.error("Erreur lors du rechargement des voitures de prêt:", error);
@@ -318,7 +387,7 @@ export default function LoanerCarPage() {
 
       ErrorService.successMessage("Succès", "Voiture de prêt archivée avec succès !");
       setLoanerCars(loanerCars.filter(car => car.id !== loanerCarToArchive.id));
-      setFilteredLoanerCars(filteredLoanerCars.filter(car => car.id !== loanerCarToArchive.id)); // Update filteredLoanerCars
+      setFilteredLoanerCars(filteredLoanerCars.filter(car => car.id !== loanerCarToArchive.id)); 
       setIsDeleteLoanerCarDialogOpen(false);
       setLoanerCarToArchive(null);
     } catch (error) {
@@ -327,7 +396,7 @@ export default function LoanerCarPage() {
     }
   };
 
-  // Logique de pagination
+  
   const totalPages = Math.ceil(filteredLoanerCars.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -428,7 +497,7 @@ export default function LoanerCarPage() {
                                 const searchValue = e.target.value;
                                 setBrandSearchTerm(searchValue);
                                 
-                                // Si l'utilisateur tape quelque chose, on désélectionne
+                                
                                 if (searchValue !== brands.find(b => b.id?.toString() === selectedBrand)?.brandName) {
                                   setSelectedBrand("");
                                 }
@@ -518,7 +587,7 @@ export default function LoanerCarPage() {
                                 const searchValue = e.target.value;
                                 setModelSearchTerm(searchValue);
                                 
-                                // Si l'utilisateur tape quelque chose, on désélectionne
+                                
                                 if (searchValue !== models.find(m => m.id?.toString() === selectedModel)?.modelName) {
                                   setSelectedModel("");
                                 }
@@ -611,7 +680,7 @@ export default function LoanerCarPage() {
                               const searchValue = e.target.value;
                               setRegistrationSearchTerm(searchValue);
                               
-                              // Si l'utilisateur tape quelque chose, on désélectionne
+                              
                               if (searchValue !== registrations.find(r => r.id?.toString() === selectedRegistration)?.registrationName) {
                                 setSelectedRegistration("");
                               }
@@ -849,6 +918,15 @@ export default function LoanerCarPage() {
                   </div>
                 ) : (
                   <>
+                    <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <div className="flex items-center space-x-2 text-blue-400">
+                        <Info className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          💡 Cliquez sur les badges de statut pour voir les détails de la voiture
+                        </span>
+                      </div>
+                    </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {currentLoanerCars.map((loanerCar) => (
                         <div
@@ -867,16 +945,20 @@ export default function LoanerCarPage() {
                             <div className="flex items-center space-x-2">
                               <button
                                 onClick={() => router.push(`/loanerCar/${loanerCar.id}`)}
-                                className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer transition-all duration-200 hover:scale-105 ${
+                                className={`px-2 py-1 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center space-x-2 group ${
                                   loanerCar.status === 'DISPONIBLE' 
-                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+                                    ? 'bg-green-500/20 text-green-400 border-2 border-green-500/40 hover:bg-green-500/30 hover:border-green-500/60 hover:shadow-green-500/25'
                                     : loanerCar.status === 'EN_PRET'
-                                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30'
-                                    : 'bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30'
+                                    ? 'bg-blue-500/20 text-blue-400 border-2 border-blue-500/40 hover:bg-blue-500/30 hover:border-blue-500/60 hover:shadow-blue-500/25'
+                                    : 'bg-orange-500/20 text-orange-400 border-2 border-orange-500/40 hover:bg-orange-500/30 hover:border-orange-500/60 hover:shadow-orange-500/25'
                                 }`}>
-                                {loanerCar.status === 'DISPONIBLE' && 'Disponible'}
-                                {loanerCar.status === 'EN_PRET' && 'En prêt'}
-                                {loanerCar.status === 'EN_MAINTENANCE' && 'Maintenance'}
+                                <span className="w-2 h-2 rounded-full bg-current animate-pulse"></span>
+                                <span>
+                                  {loanerCar.status === 'DISPONIBLE' && 'Disponible'}
+                                  {loanerCar.status === 'EN_PRET' && 'En prêt'}
+                                  {loanerCar.status === 'EN_MAINTENANCE' && 'Maintenance'}
+                                </span>
+                                <span className="text-xs opacity-70 group-hover:opacity-100 transition-opacity">→</span>
                               </button>
                             </div>
                           </div>
@@ -940,7 +1022,7 @@ export default function LoanerCarPage() {
                         <div className="flex items-center space-x-1">
                           {Array.from({ length: totalPages }, (_, index) => {
                             const pageNumber = index + 1;
-                            // Afficher seulement 5 pages autour de la page courante
+                            
                             if (
                               pageNumber === 1 ||
                               pageNumber === totalPages ||
@@ -1024,7 +1106,7 @@ export default function LoanerCarPage() {
           onClose={() => setIsCreateCarBrandDialogOpen(false)}
           onCarBrandCreated={() => {
             setIsCreateCarBrandDialogOpen(false);
-            // Recharger les marques
+            
             const loadBrands = async () => {
               try {
                 const result = await CarBrandService.getAllCarBrands();
@@ -1047,7 +1129,7 @@ export default function LoanerCarPage() {
             setIsDeleteCarBrandDialogOpen(false);
             setSelectedBrand("");
             setBrandSearchTerm("");
-            // Recharger les marques
+            
             const loadBrands = async () => {
               try {
                 const result = await CarBrandService.getAllCarBrands();
@@ -1069,7 +1151,7 @@ export default function LoanerCarPage() {
           brandName={brands.find(b => b.id?.toString() === selectedBrand)?.brandName || ""}
           onCarModelCreated={() => {
             setIsCreateCarModelDialogOpen(false);
-            // Recharger les modèles
+            
             if (selectedBrand) {
               const loadModels = async () => {
                 try {
@@ -1094,7 +1176,7 @@ export default function LoanerCarPage() {
             setIsDeleteCarModelDialogOpen(false);
             setSelectedModel("");
             setModelSearchTerm("");
-            // Recharger les modèles
+            
             if (selectedBrand) {
               const loadModels = async () => {
                 try {
@@ -1116,7 +1198,7 @@ export default function LoanerCarPage() {
           onClose={() => setIsCreateRegistrationDialogOpen(false)}
           onRegistrationCreated={() => {
             setIsCreateRegistrationDialogOpen(false);
-            // Recharger les plaques
+            
             const loadRegistrations = async () => {
               try {
                 const result = await RegistrationService.getAllRegistrations();
@@ -1139,7 +1221,7 @@ export default function LoanerCarPage() {
             setIsDeleteRegistrationDialogOpen(false);
             setSelectedRegistration("");
             setRegistrationSearchTerm("");
-            // Recharger les plaques
+            
             const loadRegistrations = async () => {
               try {
                 const result = await RegistrationService.getAllRegistrations();

@@ -9,7 +9,7 @@ export class Loan extends Model {
     public customerId!: number;
     public startDate!: Date;
     public endDate!: Date;
-    public notes!: string;
+    public notes?: string;
 
     public loanerCar?: any;
     public customer?: Customer;
@@ -61,7 +61,7 @@ Loan.init({
     },
     notes: {
         type: DataTypes.STRING(1500),
-        allowNull: false,
+        allowNull: true,
     },
 }, {
     sequelize,

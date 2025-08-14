@@ -62,7 +62,12 @@ export default class LoanService {
       } else {
         return ServiceResult.failed();
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        const errorMessage = error.response.data?.error || "Conflit de dates détecté";
+        console.error("Conflit de dates:", errorMessage);
+        return ServiceResult.conflict();
+      }
       console.error("Error creating loan:", error);
       return ServiceResult.failed();
     }
@@ -84,6 +89,32 @@ export default class LoanService {
       }
     } catch (error) {
       console.error("Error deleting loan:", error);
+      return ServiceResult.failed();
+    }
+  }
+
+  static async updateLoan(id: number, updateData: Partial<ILoan>): Promise<ServiceResult<ILoanWithAssociations>> {
+    try {
+      const response = await axios.put(
+        `${ApiService.baseURL}/loan/${id}`,
+        updateData,
+        { headers: this.getAuthHeaders() }
+      );
+      
+      if (response.status === 200) {
+        return ServiceResult.success(response.data);
+      } else if (response.status === 404) {
+        return ServiceResult.notFound();
+      } else {
+        return ServiceResult.failed();
+      }
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        const errorMessage = error.response.data?.error || "Conflit de dates détecté";
+        console.error("Conflit de dates:", errorMessage);
+        return ServiceResult.conflict();
+      }
+      console.error("Error updating loan:", error);
       return ServiceResult.failed();
     }
   }

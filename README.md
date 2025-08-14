@@ -175,6 +175,49 @@ POST   /loan                       - Créer un nouveau prêt
 DELETE /loan/:id                   - Supprimer un prêt
 ```
 
+## Loan Routes
+
+### GET /loan/
+- **Description**: Récupère tous les prêts
+- **Réponse**: Liste des prêts avec associations
+
+### GET /loan/:id
+- **Description**: Récupère un prêt par ID
+- **Paramètres**: `id` (number)
+- **Réponse**: Prêt avec associations
+
+### POST /loan/
+- **Description**: Crée un nouveau prêt
+- **Body**: 
+  ```json
+  {
+    "loanerCarId": 1,
+    "customerId": 1,
+    "orNumber": 12345,
+    "startDate": "2024-01-15",
+    "endDate": "2024-01-20",
+    "notes": "Prêt pour réparation"
+  }
+  ```
+- **Réponse**: Prêt créé
+
+### PUT /loan/:id
+- **Description**: Met à jour un prêt existant
+- **Paramètres**: `id` (number)
+- **Body**: Champs à mettre à jour (partiels)
+  ```json
+  {
+    "endDate": "2024-01-18",
+    "notes": "Prêt prolongé"
+  }
+  ```
+- **Réponse**: Prêt mis à jour avec associations
+
+### DELETE /loan/:id
+- **Description**: Supprime un prêt
+- **Paramètres**: `id` (number)
+- **Réponse**: Confirmation de suppression
+
 ## 🔧 Structure des Données
 
 ### Exemple de Commande

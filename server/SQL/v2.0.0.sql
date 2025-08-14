@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS loan(
     customer_id INT NOT NULL,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    notes VARCHAR(1500) NOT NULL,
+    notes VARCHAR(1500) NULL,
     FOREIGN KEY (loaner_car_id) REFERENCES loaner_car(id),
     FOREIGN KEY (customer_id) REFERENCES customer(id)
 );

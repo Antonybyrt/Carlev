@@ -96,7 +96,7 @@ export default class LoanerCarService {
       );
 
       if (response.status === 200) {
-        return ServiceResult.success(response.data.loanerCar);
+        return ServiceResult.success(response.data);
       } else {
         return ServiceResult.failed();
       }

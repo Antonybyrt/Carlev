@@ -5,7 +5,7 @@ export interface ILoan {
   customerId: number;
   startDate: Date;
   endDate: Date;
-  notes: string;
+  notes?: string;
 }
 
 export interface ILoanWithAssociations extends ILoan {

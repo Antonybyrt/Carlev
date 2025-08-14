@@ -30,7 +30,6 @@ export default function MyOrdersPage() {
   const [isDeleteOrderDialogOpen, setIsDeleteOrderDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<IOrderExtended | null>(null);
 
-  // États pour la pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
@@ -149,7 +148,7 @@ export default function MyOrdersPage() {
     }
   };
 
-  // Logique de pagination
+  
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -179,7 +178,7 @@ export default function MyOrdersPage() {
     setCurrentPage(totalPages);
   };
 
-  // Réinitialiser la pagination quand les filtres changent
+  
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredOrders]);
@@ -553,7 +552,7 @@ export default function MyOrdersPage() {
                 <div className="flex items-center space-x-1">
                   {Array.from({ length: totalPages }, (_, index) => {
                     const pageNumber = index + 1;
-                    // Afficher seulement 5 pages autour de la page courante
+                    
                     if (
                       pageNumber === 1 ||
                       pageNumber === totalPages ||
