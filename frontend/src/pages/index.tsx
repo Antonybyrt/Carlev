@@ -5,7 +5,6 @@ import { Package, Users, Car, TrendingUp, BarChart3, PieChart, ChevronDown } fro
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Navbar } from "@/components/navbar"
-import { AuthGuard } from "@/components/auth-guard"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { ErrorService } from "@/services/error.service"
@@ -15,6 +14,7 @@ import LoanerCarService from "@/services/loaner-car.service"
 import LoanService from "@/services/loan.service"
 import { IOrderExtended } from "@/models/order.model"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts'
+import auth from "@/services/auth.service"
 
 export default function HomePage() {
   const router = useRouter();
@@ -23,11 +23,26 @@ export default function HomePage() {
   const [totalAvailableLoanerCars, setTotalAvailableLoanerCars] = useState<number>(0);
   const [totalLoanedCars, setTotalLoanedCars] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
-    const loadData = async () => {
+    const checkAuthAndLoadData = async () => {
       try {
+        const token = localStorage.getItem("Token");
+        if (!token) {
+          router.push("/auth/login");
+          return;
+        }
+
+        const authResult = await auth.isLogged();
+        if (authResult.errorCode !== ServiceErrorCode.success || !authResult.result) {
+          localStorage.removeItem("Token");
+          router.push("/auth/login");
+          return;
+        }
+
+        setIsAuthenticated(true);
 
         const ordersResult = await OrderService.getAllOrders();
         if (ordersResult && ordersResult.errorCode === ServiceErrorCode.success) {
@@ -55,8 +70,8 @@ export default function HomePage() {
       }
     };
 
-    loadData();
-  }, []);
+    checkAuthAndLoadData();
+  }, [router]);
 
   const totalOrders = orders.length;
   const totalCustomers = new Set(orders.map(order => order.customer?.id).filter(Boolean)).size;
@@ -152,22 +167,37 @@ export default function HomePage() {
     return null;
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; 
+  }
+
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <Navbar />
-        
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-8"
-          >
-            <h1 className="text-4xl font-bold text-white mb-2">Tableau de bord</h1>
-            <p className="text-gray-400 text-lg">Vue d'ensemble de votre activité</p>
-          </motion.div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <Navbar />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold text-white mb-2">Tableau de bord</h1>
+          <p className="text-gray-400 text-lg">Vue d'ensemble de votre activité</p>
+        </motion.div>
 
           {/* Cartes de statistiques */}
           <motion.div
@@ -359,6 +389,5 @@ export default function HomePage() {
           </motion.div>
         </main>
       </div>
-    </AuthGuard>
-  )
-}
+    )
+  }

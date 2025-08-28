@@ -8,7 +8,7 @@ export class Loan extends Model {
     public orNumber!: number;
     public customerId!: number;
     public startDate!: Date;
-    public endDate!: Date;
+    public endDate?: Date;
     public notes?: string;
 
     public loanerCar?: any;
@@ -56,7 +56,7 @@ Loan.init({
     },
     endDate: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
         field: 'end_date',
     },
     notes: {

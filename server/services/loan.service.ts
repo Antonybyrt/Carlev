@@ -62,16 +62,18 @@ export class LoanService {
         }
     }
 
-    static async createLoan(loanData: { loanerCarId: number; orNumber: number; customerId: number; startDate: Date; endDate: Date; notes?: string }): Promise<ServiceResult<Loan>> {
+    static async createLoan(loanData: { loanerCarId: number; orNumber: number; customerId: number; startDate: Date; endDate?: Date; notes?: string }): Promise<ServiceResult<Loan>> {
         try {
-            const hasOverlap = await this.checkDateOverlap(
-                loanData.loanerCarId,
-                loanData.startDate,
-                loanData.endDate
-            );
+            if (loanData.endDate) {
+                const hasOverlap = await this.checkDateOverlap(
+                    loanData.loanerCarId,
+                    loanData.startDate,
+                    loanData.endDate
+                );
 
-            if (hasOverlap) {
-                return ServiceResult.conflict();
+                if (hasOverlap) {
+                    return ServiceResult.conflict();
+                }
             }
 
             const newLoan = await Loan.create(loanData);
@@ -107,15 +109,17 @@ export class LoanService {
                 const startDate = updateData.startDate || loan.startDate;
                 const endDate = updateData.endDate || loan.endDate;
                 
-                const hasOverlap = await this.checkDateOverlap(
-                    loan.loanerCarId,
-                    startDate,
-                    endDate,
-                    id
-                );
+                if (endDate) {
+                    const hasOverlap = await this.checkDateOverlap(
+                        loan.loanerCarId,
+                        startDate,
+                        endDate,
+                        id
+                    );
 
-                if (hasOverlap) {
-                    return ServiceResult.conflict();
+                    if (hasOverlap) {
+                        return ServiceResult.conflict();
+                    }
                 }
             }
 

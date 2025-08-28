@@ -125,9 +125,12 @@ export default function LoanerCarDetailPage() {
 
     if (loanSearchEndDate) {
       filtered = filtered.filter(loan => {
-        const loanEndDate = new Date(loan.endDate);
-        const searchEndDate = new Date(loanSearchEndDate);
-        return loanEndDate.toDateString() === searchEndDate.toDateString();
+        if (loan.endDate) {
+          const loanEndDate = new Date(loan.endDate);
+          const searchEndDate = new Date(loanSearchEndDate);
+          return loanEndDate.toDateString() === searchEndDate.toDateString();
+        }
+        return false;
       });
     }
 
@@ -199,15 +202,31 @@ export default function LoanerCarDetailPage() {
         const activeLoan = loans.find(loan => {
           const now = new Date();
           const startDate = new Date(loan.startDate);
-          const endDate = new Date(loan.endDate);
-          return startDate <= now && now <= endDate;
+          if (loan.endDate) {
+            const endDate = new Date(loan.endDate);
+            return startDate <= now && now <= endDate;
+          }
+          return startDate <= now;
         });
 
         if (activeLoan) {
           const today = new Date();
-          const originalEndDate = new Date(activeLoan.endDate);
-          
-          if (today < originalEndDate) {
+          if (activeLoan.endDate) {
+            const originalEndDate = new Date(activeLoan.endDate);
+            
+            if (today < originalEndDate) {
+              const updateResult = await LoanService.updateLoan(activeLoan.id!, { endDate: today });
+              
+              if (!updateResult || updateResult.errorCode !== ServiceErrorCode.success) {
+                if (updateResult?.errorCode === ServiceErrorCode.conflict) {
+                  ErrorService.errorMessage("Conflit de Dates", "Impossible de mettre à jour le prêt : conflit de dates détecté.");
+                } else {
+                  ErrorService.errorMessage("Erreur", "Impossible de mettre à jour le prêt");
+                }
+                return;
+              }
+            }
+          } else {
             const updateResult = await LoanService.updateLoan(activeLoan.id!, { endDate: today });
             
             if (!updateResult || updateResult.errorCode !== ServiceErrorCode.success) {
@@ -218,19 +237,6 @@ export default function LoanerCarDetailPage() {
               }
               return;
             }
-
-            const loadLoans = async () => {
-              try {
-                const result = await LoanService.getAllLoans();
-                if (result && result.errorCode === ServiceErrorCode.success) {
-                  const filteredLoans = result.result?.filter(loan => loan.loanerCarId === loanerCar.id) || [];
-                  setLoans(filteredLoans);
-                }
-              } catch (error) {
-                console.error("Erreur lors du rechargement des prêts:", error);
-              }
-            };
-            loadLoans();
           }
         }
       }
@@ -265,6 +271,34 @@ export default function LoanerCarDetailPage() {
       
       ErrorService.successMessage("Succès", successMessage);
       
+      if (newStatus === 'DISPONIBLE' && loanerCar.status === 'EN_PRET') {
+        const loadLoanerCar = async () => {
+          try {
+            const result = await LoanerCarService.getLoanerCarById(loanerCar.id!);
+            if (result && result.errorCode === ServiceErrorCode.success && result.result) {
+              setLoanerCar(result.result);
+            }
+          } catch (error) {
+            console.error("Erreur lors du rechargement de la voiture de prêt:", error);
+          }
+        };
+        
+        const loadLoans = async () => {
+          try {
+            const result = await LoanService.getAllLoans();
+            if (result && result.errorCode === ServiceErrorCode.success) {
+              const filteredLoans = result.result?.filter(loan => loan.loanerCarId === loanerCar.id) || [];
+              setLoans(filteredLoans);
+            }
+          } catch (error) {
+            console.error("Erreur lors du rechargement des prêts:", error);
+          }
+        };
+        
+        loadLoanerCar();
+        loadLoans();
+      }
+      
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
       ErrorService.errorMessage("Erreur", "Une erreur s'est produite lors de la mise à jour du statut");
@@ -286,17 +320,38 @@ export default function LoanerCarDetailPage() {
       }
 
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const startDate = new Date(loanData.startDate);
-      const endDate = new Date(loanData.endDate);
-      
-      if (today >= startDate && today <= endDate) {
-        const statusResult = await LoanerCarService.updateLoanerCar(loanerCar.id!, { status: 'EN_PRET' });
-        if (statusResult && statusResult.errorCode === ServiceErrorCode.success) {
-          setLoanerCar(prev => prev ? { ...prev, status: 'EN_PRET' } : null);
-          ErrorService.successMessage("Succès", "Prêt créé et voiture mise en prêt avec succès !");
+      startDate.setHours(0, 0, 0, 0);
+
+      if (loanData.endDate) {
+        const endDate = new Date(loanData.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        
+        if (endDate < today) {
+          ErrorService.successMessage("Succès", "Prêt créé avec succès ! La voiture restera disponible car la date de fin est dans le passé.");
+          const loadLoans = async () => {
+            try {
+              const result = await LoanService.getAllLoans();
+              if (result && result.errorCode === ServiceErrorCode.success) {
+                const filteredLoans = result.result?.filter(loan => loan.loanerCarId === loanerCar.id) || [];
+                setLoans(filteredLoans);
+              }
+            } catch (error) {
+              console.error("Erreur lors du rechargement des prêts:", error);
+            }
+          };
+          loadLoans();
+          return;
         }
+      }
+
+      const statusResult = await LoanerCarService.updateLoanerCar(loanerCar.id!, { status: 'EN_PRET' });
+      if (statusResult && statusResult.errorCode === ServiceErrorCode.success) {
+        setLoanerCar(prev => prev ? { ...prev, status: 'EN_PRET' } : null);
+        ErrorService.successMessage("Succès", "Prêt créé et voiture mise en prêt avec succès !");
       } else {
-        ErrorService.successMessage("Succès", "Prêt créé avec succès ! La voiture restera disponible jusqu'à la date de début.");
+        ErrorService.errorMessage("Erreur", "Prêt créé mais impossible de mettre à jour le statut de la voiture");
       }
 
       const loadLoans = async () => {
@@ -510,8 +565,14 @@ export default function LoanerCarDetailPage() {
               )}
 
               <Button
-                className="border-2 border-orange-500/60 text-orange-400 hover:text-white hover:border-orange-400 bg-transparent hover:bg-orange-400/10 backdrop-blur-sm transition-all duration-200 focus:ring-2 focus:ring-orange-400/20 focus:outline-none"
+                className={`border-2 transition-all duration-200 focus:ring-2 focus:outline-none ${
+                  loanerCar.status === 'EN_PRET' 
+                    ? 'border-gray-500/60 text-gray-400 bg-transparent cursor-not-allowed opacity-50' 
+                    : 'border-orange-500/60 text-orange-400 hover:text-white hover:border-orange-400 bg-transparent hover:bg-orange-400/10 focus:ring-orange-400/20'
+                }`}
                 onClick={() => setIsDeleteLoanerCarDialogOpen(true)}
+                disabled={loanerCar.status === 'EN_PRET'}
+                title={loanerCar.status === 'EN_PRET' ? 'Impossible d\'archiver une voiture en prêt. Terminez d\'abord le prêt.' : 'Archiver cette voiture de prêt'}
               >
                 <Archive className="w-4 h-4 mr-2" />
                 Archiver
@@ -594,14 +655,20 @@ export default function LoanerCarDetailPage() {
                   {loans.length > 0 && loans.some(loan => {
                     const now = new Date();
                     const startDate = new Date(loan.startDate);
-                    const endDate = new Date(loan.endDate);
-                    return startDate <= now && now <= endDate;
+                    if (loan.endDate) {
+                      const endDate = new Date(loan.endDate);
+                      return startDate <= now && now <= endDate;
+                    }
+                    return startDate <= now;
                   }) ? (
                     loans.filter(loan => {
                       const now = new Date();
                       const startDate = new Date(loan.startDate);
-                      const endDate = new Date(loan.endDate);
-                      return startDate <= now && now <= endDate;
+                      if (loan.endDate) {
+                        const endDate = new Date(loan.endDate);
+                        return startDate <= now && now <= endDate;
+                      }
+                      return startDate <= now;
                     }).map((activeLoan) => (
                       <div key={activeLoan.id} className="space-y-4">
                         <div className="flex items-center space-x-2 mb-4">
@@ -629,7 +696,9 @@ export default function LoanerCarDetailPage() {
                             </div>
                             <div>
                               <h4 className="text-sm text-gray-400 mb-2 uppercase tracking-wide font-semibold">Date fin</h4>
-                              <p className="text-white text-lg font-medium">{formatDate(activeLoan.endDate)}</p>
+                              <p className="text-white text-lg font-medium">
+                                {activeLoan.endDate ? formatDate(activeLoan.endDate) : "Non définie"}
+                              </p>
                             </div>
                           </div>
                           
@@ -808,7 +877,7 @@ export default function LoanerCarDetailPage() {
                           <div className="text-right">
                             <div className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">Période</div>
                             <div className="text-white text-base font-medium">
-                              {formatDate(loan.startDate)} - {formatDate(loan.endDate)}
+                              {formatDate(loan.startDate)} - {loan.endDate ? formatDate(loan.endDate) : "Non définie"}
                             </div>
                           </div>
                         </div>

@@ -186,8 +186,11 @@ export default function LoanerCarPage() {
             const hasActiveLoan = allLoans.some(loan => {
               if (loan.loanerCarId === loanerCar.id) {
                 const startDate = new Date(loan.startDate);
-                const endDate = new Date(loan.endDate);
-                return startDate <= now && now <= endDate;
+                if (loan.endDate) {
+                  const endDate = new Date(loan.endDate);
+                  return startDate <= now && now <= endDate;
+                }
+                return startDate <= now;
               }
               return false;
             });
@@ -211,8 +214,11 @@ export default function LoanerCarPage() {
             const hasActiveLoan = allLoans.some(loan => {
               if (loan.loanerCarId === loanerCar.id) {
                 const startDate = new Date(loan.startDate);
-                const endDate = new Date(loan.endDate);
-                return startDate <= now && now <= endDate;
+                if (loan.endDate) {
+                  const endDate = new Date(loan.endDate);
+                  return startDate <= now && now <= endDate;
+                }
+                return startDate <= now;
               }
               return false;
             });
@@ -983,7 +989,13 @@ export default function LoanerCarPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleDeleteLoanerCar(loanerCar.id)}
-                              className="border-orange-500/30 text-orange-400 hover:text-orange-300 hover:border-orange-400 hover:bg-orange-500/10 transition-all duration-200"
+                              disabled={loanerCar.status === 'EN_PRET'}
+                              className={`transition-all duration-200 ${
+                                loanerCar.status === 'EN_PRET'
+                                  ? 'border-gray-500/30 text-gray-400 cursor-not-allowed opacity-50'
+                                  : 'border-orange-500/30 text-orange-400 hover:text-orange-300 hover:border-orange-400 hover:bg-orange-500/10'
+                              }`}
+                              title={loanerCar.status === 'EN_PRET' ? 'Impossible d\'archiver une voiture en prêt. Terminez d\'abord le prêt.' : 'Archiver cette voiture de prêt'}
                             >
                               <Archive className="w-4 h-4 mr-2" />
                               Archiver

@@ -72,9 +72,9 @@ export function DeleteLoanDialog({ isOpen, onClose, onLoanDeleted, loan }: Delet
                     
                     <div>
                       <h4 className="text-sm text-gray-400 uppercase tracking-wide font-semibold mb-1">Période</h4>
-                      <p className="text-white font-medium">
-                        {new Date(loan.startDate).toLocaleDateString('fr-FR')} - {new Date(loan.endDate).toLocaleDateString('fr-FR')}
-                      </p>
+                      <div className="text-sm text-gray-400">
+                        {new Date(loan.startDate).toLocaleDateString('fr-FR')} - {loan.endDate ? new Date(loan.endDate).toLocaleDateString('fr-FR') : 'Non définie'}
+                      </div>
                     </div>
                   </div>
                 </div>

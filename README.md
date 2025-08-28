@@ -286,3 +286,45 @@ DELETE /loan/:id                   - Supprimer un prêt
 ## 📝 Licence
 
 Ce projet est sous licence AGPL3.0. Voir le fichier LICENSE pour plus de détails.
+
+## 📊 Migrations SQL
+
+### v2.0.0 - Tables de base pour les voitures de prêt
+```sql
+-- Création de la table loaner_car
+CREATE TABLE loaner_car (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    car_brand_id INT NOT NULL,
+    car_model_id INT NOT NULL,
+    registration_id INT NOT NULL,
+    status ENUM('DISPONIBLE', 'EN_PRET', 'EN_MAINTENANCE') NOT NULL DEFAULT 'DISPONIBLE',
+    FOREIGN KEY (car_brand_id) REFERENCES car_brand(id),
+    FOREIGN KEY (car_model_id) REFERENCES car_model(id),
+    FOREIGN KEY (registration_id) REFERENCES registration(id)
+);
+
+-- Création de la table loan
+CREATE TABLE loan (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    loaner_car_id INT NOT NULL,
+    or_number INT NOT NULL,
+    customer_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    notes VARCHAR(1500) NULL,
+    FOREIGN KEY (loaner_car_id) REFERENCES loaner_car(id),
+    FOREIGN KEY (customer_id) REFERENCES customer(id)
+);
+```
+
+### v2.1.0 - Soft delete pour les voitures de prêt
+```sql
+-- Ajout du champ is_deleted pour le soft delete
+ALTER TABLE loaner_car ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+```
+
+### v2.2.0 - Date de fin optionnelle pour les prêts
+```sql
+-- Rendre la date de fin optionnelle
+ALTER TABLE loan MODIFY COLUMN end_date DATE NULL;
+```

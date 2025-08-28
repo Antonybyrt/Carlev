@@ -37,6 +37,13 @@ export function CreateLoanDialog({ isOpen, onClose, onLoanCreated, loanerCar }: 
   useEffect(() => {
     if (isOpen) {
       loadCustomers()
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      setStartDate(`${year}-${month}-${day}T${hours}:${minutes}`);
     }
   }, [isOpen])
 
@@ -69,7 +76,7 @@ export function CreateLoanDialog({ isOpen, onClose, onLoanCreated, loanerCar }: 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!selectedCustomer || !orNumber || !startDate || !endDate) {
+    if (!selectedCustomer || !orNumber || !startDate) {
       return
     }
 
@@ -85,14 +92,13 @@ export function CreateLoanDialog({ isOpen, onClose, onLoanCreated, loanerCar }: 
         customerId: customer.id,
         orNumber: parseInt(orNumber),
         startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        endDate: endDate ? new Date(endDate) : undefined,
         notes,
         loanerCarId: loanerCar.id
       }
       
       onLoanCreated(loanData)
       
-      // Réinitialiser le formulaire
       setSelectedCustomer("")
       setOrNumber("")
       setStartDate("")
@@ -308,7 +314,7 @@ export function CreateLoanDialog({ isOpen, onClose, onLoanCreated, loanerCar }: 
                       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
                         id="startDate"
-                        type="date"
+                        type="datetime-local"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                         className="pl-10 bg-gray-700/60 border-gray-600 text-white focus:border-blue-400"
@@ -320,7 +326,7 @@ export function CreateLoanDialog({ isOpen, onClose, onLoanCreated, loanerCar }: 
 
                   <div className="space-y-2">
                     <Label htmlFor="endDate" className="text-gray-300">
-                      Date fin *
+                      Date fin
                     </Label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -331,7 +337,6 @@ export function CreateLoanDialog({ isOpen, onClose, onLoanCreated, loanerCar }: 
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         className="pl-10 bg-gray-700/60 border-gray-600 text-white focus:border-blue-400"
-                        required
                         disabled={isSubmitting}
                       />
                     </div>
@@ -398,7 +403,7 @@ export function CreateLoanDialog({ isOpen, onClose, onLoanCreated, loanerCar }: 
       isOpen={isCreateCustomerDialogOpen}
       onClose={() => setIsCreateCustomerDialogOpen(false)}
       onCustomerCreated={handleCustomerCreated}
-      loginId={1} // Placeholder for loginId
+      loginId={1}
     />
     <DeleteCustomerDialog
       isOpen={isDeleteCustomerDialogOpen}

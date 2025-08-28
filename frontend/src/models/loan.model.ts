@@ -4,7 +4,7 @@ export interface ILoan {
   orNumber: number;
   customerId: number;
   startDate: Date;
-  endDate: Date;
+  endDate?: Date;
   notes?: string;
 }
 

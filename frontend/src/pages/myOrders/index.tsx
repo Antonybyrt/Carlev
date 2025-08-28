@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Package, Car, User, CreditCard, FileText, Calendar, Truck, ArrowLeft, Trash2 } from "lucide-react"
+import { Package, Car, User, CreditCard, FileText, Calendar, Truck, ArrowLeft, Trash2, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Navbar } from "@/components/navbar"
@@ -15,6 +15,7 @@ import { IOrderExtended } from "@/models/order.model"
 import { DeleteOrderDialog } from "@/components/dialog";
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import jsPDF from 'jspdf'
 
 export default function MyOrdersPage() {
   const router = useRouter();
@@ -176,6 +177,213 @@ export default function MyOrdersPage() {
 
   const goToLastPage = () => {
     setCurrentPage(totalPages);
+  };
+
+  const generateOrderPDF = (order: IOrderExtended) => {
+    const doc = new jsPDF();
+    
+    const primaryColor = [44, 62, 80];
+    const secondaryColor = [52, 73, 94];
+    const accentColor = [231, 76, 60];
+    const darkColor = [26, 32, 44];
+    const textColor = [44, 62, 80];
+
+    const addNewPage = () => {
+      doc.addPage();
+      return 20;
+    };
+
+    const checkPageBreak = (currentY: number, requiredSpace: number) => {
+      const pageHeight = doc.internal.pageSize.height;
+      if (currentY + requiredSpace > pageHeight - 30) {
+        return addNewPage();
+      }
+      return currentY;
+    };
+
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(0, 0, 210, 35, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text("RÉCAPITULATIF DE COMMANDE", 105, 18, { align: 'center' });
+    
+    doc.setFontSize(16);
+    doc.text(`Commande N° ${order.id}`, 105, 28, { align: 'center' });
+    
+    let yPosition = 45;
+    
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Date de création:", 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formatDate(order.creationDate), 70, yPosition);
+    
+    yPosition += 15;
+    
+    yPosition = checkPageBreak(yPosition, 40);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text("INFORMATIONS GÉNÉRALES", 20, yPosition);
+    
+    yPosition += 10;
+    
+    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setLineWidth(0.3);
+    doc.line(20, yPosition, 190, yPosition);
+    
+    yPosition += 15;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text("Compte:", 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(order.login?.loginName || "Non spécifié", 70, yPosition);
+    
+    yPosition += 8;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text("Client:", 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(order.customer ? `${order.customer.firstName} ${order.customer.lastName}` : "Non spécifié", 70, yPosition);
+    
+    yPosition += 8;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text("Fournisseur:", 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(order.supplier?.supplierName || "Non spécifié", 70, yPosition);
+    
+    yPosition += 20;
+    
+    yPosition = checkPageBreak(yPosition, 40);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text("VÉHICULE", 20, yPosition);
+    
+    yPosition += 10;
+    
+    doc.line(20, yPosition, 190, yPosition);
+    
+    yPosition += 15;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text("Marque & Modèle:", 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(order.carBrand?.brandName && order.carModel?.modelName ? `${order.carBrand.brandName} ${order.carModel.modelName}` : "Non spécifié", 70, yPosition);
+    
+    yPosition += 8;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text("Plaque:", 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(order.registration?.registrationName || "Non spécifiée", 70, yPosition);
+    
+    yPosition += 20;
+    
+    yPosition = checkPageBreak(yPosition, 50);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text("PIÈCES COMMANDÉES", 20, yPosition);
+    
+    yPosition += 10;
+    
+    doc.line(20, yPosition, 190, yPosition);
+    
+    yPosition += 15;
+    
+    if (order.orderDetails && order.orderDetails.length > 0) {
+      doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+      doc.rect(20, yPosition, 120, 8, 'F');
+      doc.rect(150, yPosition, 40, 8, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text("DESCRIPTION", 25, yPosition + 6);
+      doc.text("QUANTITÉ", 155, yPosition + 6);
+      
+      let tableY = yPosition + 12;
+      order.orderDetails.forEach((detail, index) => {
+        tableY = checkPageBreak(tableY, 10);
+        
+        if (tableY === 20) {
+          doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+          doc.rect(20, tableY, 120, 8, 'F');
+          doc.rect(150, tableY, 40, 8, 'F');
+          
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.text("DESCRIPTION", 25, tableY + 6);
+          doc.text("QUANTITÉ", 155, tableY + 6);
+          
+          tableY += 12;
+        }
+        
+        const rowColor = index % 2 === 0 ? [248, 249, 250] : [255, 255, 255];
+        doc.setFillColor(rowColor[0], rowColor[1], rowColor[2]);
+        doc.rect(20, tableY, 120, 8, 'F');
+        doc.rect(150, tableY, 40, 8, 'F');
+        
+        doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        
+        const itemName = detail.item?.itemName || `Pièce ${detail.itemId}`;
+        const truncatedName = itemName.length > 30 ? itemName.substring(0, 27) + '...' : itemName;
+        doc.text(truncatedName, 25, tableY + 6);
+        doc.text(detail.quantity.toString(), 155, tableY + 6);
+        
+        tableY += 8;
+      });
+      
+      yPosition = tableY + 10;
+    } else {
+      doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'italic');
+      doc.text("Aucun détail disponible", 20, yPosition);
+      yPosition += 20;
+    }
+    
+    yPosition = checkPageBreak(yPosition, 35);
+    yPosition += 15;
+    
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text("TOTAL:", 20, yPosition);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${getTotalItems(order.orderDetails)} pièces`, 42, yPosition);
+    
+    yPosition += 25;
+    
+    const footerText = "Document généré automatiquement par CarLev";
+    const footerY = doc.internal.pageSize.height - 15;
+    const footerX = doc.internal.pageSize.width / 2;
+    
+    doc.setTextColor(darkColor[0], darkColor[1], darkColor[2]);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(footerText, footerX, footerY, { align: 'center' });
+    
+    doc.save(`Commande_${order.id}_${formatDate(order.creationDate).replace(/\//g, '-')}.pdf`);
+    
+    ErrorService.successMessage("Succès", "Récapitulatif de commande téléchargé !");
   };
 
   
@@ -503,7 +711,16 @@ export default function MyOrdersPage() {
                       </div>
                     </CardContent>
                     <div className="border-t border-gray-700 px-6 py-4">
-                      <div className="flex justify-end">
+                      <div className="flex justify-end space-x-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generateOrderPDF(order)}
+                          className="border-blue-500/30 text-blue-400 hover:text-blue-300 hover:border-blue-400 hover:bg-blue-500/10 transition-all duration-200"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Télécharger
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"

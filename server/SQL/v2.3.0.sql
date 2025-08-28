@@ -1,0 +1,1 @@
+ALTER TABLE loan MODIFY COLUMN end_date DATE NULL;

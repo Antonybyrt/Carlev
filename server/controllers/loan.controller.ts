@@ -46,8 +46,8 @@ export class LoanController {
     async createLoan(req: Request, res: Response): Promise<void> {
         try {
             const { loanerCarId, orNumber, customerId, startDate, endDate, notes } = req.body;
-            if (!loanerCarId || !orNumber || !customerId || !startDate || !endDate) {
-                res.status(400).json({ error: "loanerCarId, orNumber, customerId, startDate, and endDate are required" });
+            if (!loanerCarId || !orNumber || !customerId || !startDate) {
+                res.status(400).json({ error: "loanerCarId, orNumber, customerId, and startDate are required" });
                 return;
             }
 
@@ -56,7 +56,7 @@ export class LoanController {
                 orNumber,
                 customerId,
                 startDate: new Date(startDate),
-                endDate: new Date(endDate),
+                endDate: endDate ? new Date(endDate) : undefined,
                 notes: notes || undefined
             };
 
@@ -69,7 +69,7 @@ export class LoanController {
                 res.status(500).json({ error: "Internal Server Error" });
             }
         } catch (error) {
-            console.error("Error creating loan:", error);
+            console.error("Error creating loan", error);
             res.status(500).json({ error: "Internal Server Error" });
         }
     }
