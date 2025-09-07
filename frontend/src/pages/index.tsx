@@ -5,7 +5,7 @@ import { Package, Users, Car, TrendingUp, BarChart3, PieChart, ChevronDown } fro
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Navbar } from "@/components/navbar"
-import { useRouter } from "next/navigation"
+import { AuthGuard } from "@/components/auth-guard"
 import { useState, useEffect } from "react"
 import { ErrorService } from "@/services/error.service"
 import { ServiceErrorCode } from "@/services/service.result"
@@ -14,35 +14,19 @@ import LoanerCarService from "@/services/loaner-car.service"
 import LoanService from "@/services/loan.service"
 import { IOrderExtended } from "@/models/order.model"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts'
-import auth from "@/services/auth.service"
 
-export default function HomePage() {
-  const router = useRouter();
+function DashboardContent() {
   const [orders, setOrders] = useState<IOrderExtended[]>([]);
   const [ordersByAccount, setOrdersByAccount] = useState<any[]>([]);
   const [totalAvailableLoanerCars, setTotalAvailableLoanerCars] = useState<number>(0);
   const [totalLoanedCars, setTotalLoanedCars] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
-    const checkAuthAndLoadData = async () => {
+    const loadDashboardData = async () => {
       try {
-        const token = localStorage.getItem("Token");
-        if (!token) {
-          router.push("/auth/login");
-          return;
-        }
-
-        const authResult = await auth.isLogged();
-        if (authResult.errorCode !== ServiceErrorCode.success || !authResult.result) {
-          localStorage.removeItem("Token");
-          router.push("/auth/login");
-          return;
-        }
-
-        setIsAuthenticated(true);
+        setIsLoading(true);
 
         const ordersResult = await OrderService.getAllOrders();
         if (ordersResult && ordersResult.errorCode === ServiceErrorCode.success) {
@@ -70,8 +54,8 @@ export default function HomePage() {
       }
     };
 
-    checkAuthAndLoadData();
-  }, [router]);
+    loadDashboardData();
+  }, []);
 
   const totalOrders = orders.length;
   const totalCustomers = new Set(orders.map(order => order.customer?.id).filter(Boolean)).size;
@@ -175,12 +159,9 @@ export default function HomePage() {
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
         />
+        <span className="ml-3 text-gray-400">Chargement du dashboard...</span>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return null; 
   }
 
   return (
@@ -389,5 +370,13 @@ export default function HomePage() {
           </motion.div>
         </main>
       </div>
-    )
-  }
+    );
+}
+
+export default function HomePage() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
+  );
+}
