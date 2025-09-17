@@ -1,0 +1,2 @@
+ALTER TABLE orders 
+ADD COLUMN notes notes VARCHAR(1500) NULL;

@@ -708,6 +708,20 @@ export default function MyOrdersPage() {
                             </div>
                           )}
                         </div>
+
+                        {order.notes && order.notes.trim() && (
+                          <div className="bg-gray-700/30 rounded-lg p-4">
+                            <h4 className="text-base font-bold text-white mb-3 flex items-center border-b border-gray-600/50 pb-2">
+                              <FileText className="w-4 h-4 mr-2 text-green-400" />
+                              Notes
+                            </h4>
+                            <div className="bg-gray-600/50 rounded-lg p-3 border border-gray-600/30">
+                              <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                                {order.notes}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                     <div className="border-t border-gray-700 px-6 py-4">

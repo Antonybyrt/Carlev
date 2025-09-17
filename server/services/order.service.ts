@@ -16,6 +16,7 @@ export class OrderService {
     static async getOrderDetails(): Promise<ServiceResult<Order[]>> {
         try {
             const orders = await Order.findAll({
+                attributes: ['id', 'creationDate', 'customerId', 'carBrandId', 'carModelId', 'supplierId', 'loginId', 'registrationId', 'notes'],
                 include: [
                     {
                         model: OrderDetail,
@@ -106,6 +107,19 @@ export class OrderService {
             await OrderDetail.destroy({ where: { orderId } });
             await order.destroy();
             return ServiceResult.success(true);
+        } catch (error) {
+            return ServiceResult.failed();
+        }
+    }
+
+    static async updateOrder(orderId: number, orderData: any): Promise<ServiceResult<Order>> {
+        try {
+            const order = await Order.findByPk(orderId);
+            if (!order) {
+                return ServiceResult.notFound();
+            }
+            await order.update(orderData);
+            return ServiceResult.success(order);
         } catch (error) {
             return ServiceResult.failed();
         }

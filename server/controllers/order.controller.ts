@@ -71,12 +71,32 @@ export class OrderController {
         }
     }
 
+    async updateOrder(req: Request, res: Response): Promise<void> {
+        try {
+            const { orderId } = req.params;
+            const numericOrderId = parseInt(orderId);
+
+            if (isNaN(numericOrderId)) {
+                res.status(400).json({ error: "Invalid orderId" });
+                return;
+            }
+
+            const orderData = req.body;
+            const result = await OrderService.updateOrder(numericOrderId, orderData);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error("Error updating order:", error);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+
     buildRoutes(): Router {
         const router = express.Router();
         router.post("/orders", this.createOrder.bind(this));
         router.get("/orderDetails", this.getOrderDetails.bind(this));
         router.get("/byAccount", this.getOrdersByAccount.bind(this));
         router.delete('/delete/:order_id', this.deleteOrder.bind(this));
+        router.put('/update/:orderId', this.updateOrder.bind(this));
         return router;
     }
 } 

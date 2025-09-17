@@ -16,6 +16,7 @@ export class Order extends Model {
     public supplierId!: number;
     public loginId!: number;
     public registrationId!: number;
+    public notes?: string;
 
     public customer?: Customer;
     public carBrand?: CarBrand;
@@ -97,6 +98,11 @@ Order.init({
             key: 'id',
         },
     },
+    notes: {
+        type: DataTypes.STRING(1500),
+        allowNull: true,
+        field: 'notes',
+    }
 }, {
     sequelize,
     tableName: 'orders',

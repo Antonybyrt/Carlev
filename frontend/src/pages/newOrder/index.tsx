@@ -92,6 +92,7 @@ export default function NewOrderPage() {
   const [filteredLogins, setFilteredLogins] = useState<ILogin[]>([]);
 
   const [orderDate, setOrderDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [notes, setNotes] = useState<string>("");
 
   useEffect(() => {
     const loadLogins = async () => {
@@ -310,7 +311,8 @@ export default function NewOrderPage() {
         carModelId: parseInt(selectedModel),
         supplierId: parseInt(selectedSupplier),
         loginId: parseInt(selectedLogin),
-        registrationId: parseInt(selectedRegistration)
+        registrationId: parseInt(selectedRegistration),
+        notes: notes.trim() || undefined
       };
 
       console.log("Création de la commande:", orderData);
@@ -1131,6 +1133,27 @@ export default function NewOrderPage() {
                         >
                           + Ajouter un champ
                         </Button>
+                      </div>
+                      
+                      {/* Champ Notes */}
+                      <div className="space-y-2">
+                        <Label htmlFor="notes" className="text-gray-300">
+                          Notes (optionnel)
+                        </Label>
+                        <div className="relative">
+                          <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                          <Textarea
+                            id="notes"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Ajoutez des notes ou commentaires pour cette commande..."
+                            className="pl-10 bg-gray-700/60 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 min-h-[100px] max-h-[200px] resize-none overflow-y-auto"
+                            rows={4}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          Maximum 1500 caractères. Le texte dépassant cette limite sera automatiquement tronqué.
+                        </p>
                       </div>
                       
                     </div>

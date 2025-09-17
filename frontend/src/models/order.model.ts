@@ -7,6 +7,7 @@ export interface IOrder {
   supplierId: number;
   loginId: number;
   registrationId: number;
+  notes?: string;
 }
 
 export interface IOrderResponse {
@@ -39,6 +40,7 @@ export interface IOrderExtended extends IOrder {
     id: number;
     registrationName: string;
   };
+  notes?: string;
   orderDetails?: Array<{
     id: number;
     itemId: number;
