@@ -39,6 +39,14 @@ import { IOrderResponse } from "@/models/order.model";
 
 export default function NewOrderPage() {
   const router = useRouter();
+  
+  const sortCustomersByLastName = (customers: ICustomer[]): ICustomer[] => {
+    return [...customers].sort((a, b) => {
+      const lastNameA = (a.lastName || '').toLowerCase();
+      const lastNameB = (b.lastName || '').toLowerCase();
+      return lastNameA.localeCompare(lastNameB);
+    });
+  };
   const [logins, setLogins] = useState<ILogin[]>([]);
   const [selectedLogin, setSelectedLogin] = useState<string>("");
   const [isLoadingLogins, setIsLoadingLogins] = useState(true);
@@ -138,8 +146,9 @@ export default function NewOrderPage() {
         try {
           const customersData = await CustomerService.getCustomersByLogin(parseInt(selectedLogin));
           if (customersData && customersData.errorCode === ServiceErrorCode.success) {
-            setCustomers(customersData.result || []);
-            setFilteredCustomers(customersData.result || []);
+            const sortedCustomers = sortCustomersByLastName(customersData.result || []);
+            setCustomers(sortedCustomers);
+            setFilteredCustomers(sortedCustomers);
           } else {
             setCustomers([]);
             setFilteredCustomers([]);
@@ -175,7 +184,8 @@ export default function NewOrderPage() {
         customer.firstName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
         customer.lastName.toLowerCase().includes(customerSearchTerm.toLowerCase())
       );
-      setFilteredCustomers(filtered);
+      const sortedFiltered = sortCustomersByLastName(filtered);
+      setFilteredCustomers(sortedFiltered);
     }
   }, [customerSearchTerm, customers]);
 
@@ -498,7 +508,7 @@ export default function NewOrderPage() {
                             <Input
                               id="customerSelect"
                               placeholder={selectedCustomer ? 
-                                `${customers.find(c => c.id?.toString() === selectedCustomer)?.firstName} ${customers.find(c => c.id?.toString() === selectedCustomer)?.lastName} (sélectionné)` : 
+                                `${customers.find(c => c.id?.toString() === selectedCustomer)?.lastName} ${customers.find(c => c.id?.toString() === selectedCustomer)?.firstName} (sélectionné)` : 
                                 "Tapez pour rechercher un client..."
                               }
                               value={customerSearchTerm}
@@ -541,7 +551,7 @@ export default function NewOrderPage() {
                                       if (dropdown) dropdown.classList.add('hidden');
                                     }}
                                   >
-                                    {customer.firstName} {customer.lastName}
+                                    {customer.lastName} {customer.firstName}
                                   </div>
                                 ))
                               )}
@@ -1195,8 +1205,9 @@ export default function NewOrderPage() {
               try {
                 const customersData = await CustomerService.getCustomersByLogin(parseInt(selectedLogin));
                 if (customersData && customersData.errorCode === ServiceErrorCode.success) {
-                  setCustomers(customersData.result || []);
-                  setFilteredCustomers(customersData.result || []);
+                  const sortedCustomers = sortCustomersByLastName(customersData.result || []);
+                  setCustomers(sortedCustomers);
+                  setFilteredCustomers(sortedCustomers);
                 }
               } catch (error) {
                 console.error("Erreur lors du rechargement des clients:", error);
@@ -1219,8 +1230,9 @@ export default function NewOrderPage() {
               try {
                 const customersData = await CustomerService.getCustomersByLogin(parseInt(selectedLogin));
                 if (customersData && customersData.errorCode === ServiceErrorCode.success) {
-                  setCustomers(customersData.result || []);
-                  setFilteredCustomers(customersData.result || []);
+                  const sortedCustomers = sortCustomersByLastName(customersData.result || []);
+                  setCustomers(sortedCustomers);
+                  setFilteredCustomers(sortedCustomers);
                 }
               } catch (error) {
                 console.error("Erreur lors du rechargement des clients:", error);
