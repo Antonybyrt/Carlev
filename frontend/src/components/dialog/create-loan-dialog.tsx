@@ -333,7 +333,7 @@ export function CreateLoanDialog({ isOpen, onClose, onLoanCreated, loanerCar }: 
                       />
                       <Input
                         id="endDate"
-                        type="date"
+                        type="datetime-local"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         className="pl-10 bg-gray-700/60 border-gray-600 text-white focus:border-blue-400"

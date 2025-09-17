@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Navbar } from "@/components/navbar"
 import { AuthGuard } from "@/components/auth-guard"
-import { CreateLoanDialog, DeleteLoanDialog, ArchiveLoanerCarDialog } from "@/components/dialog"
+import { CreateLoanDialog, DeleteLoanDialog, EndLoanDialog, ArchiveLoanerCarDialog } from "@/components/dialog"
 import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import { ErrorService } from "@/services/error.service"
@@ -30,7 +30,9 @@ export default function LoanerCarDetailPage() {
   const [isDeleteLoanerCarDialogOpen, setIsDeleteLoanerCarDialogOpen] = useState(false);
   const [isCreateLoanDialogOpen, setIsCreateLoanDialogOpen] = useState(false);
   const [isDeleteLoanDialogOpen, setIsDeleteLoanDialogOpen] = useState(false);
+  const [isEndLoanDialogOpen, setIsEndLoanDialogOpen] = useState(false);
   const [selectedLoanForDeletion, setSelectedLoanForDeletion] = useState<ILoanWithAssociations | null>(null);
+  const [selectedLoanForEnding, setSelectedLoanForEnding] = useState<ILoanWithAssociations | null>(null);
 
   
   const [loanSearchCustomer, setLoanSearchCustomer] = useState<string>("");
@@ -381,6 +383,23 @@ export default function LoanerCarDetailPage() {
     }
   };
 
+  const handleEndLoan = () => {
+    const activeLoan = loans.find(loan => {
+      const now = new Date();
+      const startDate = new Date(loan.startDate);
+      if (loan.endDate) {
+        const endDate = new Date(loan.endDate);
+        return startDate <= now && now <= endDate;
+      }
+      return startDate <= now;
+    });
+
+    if (activeLoan) {
+      setSelectedLoanForEnding(activeLoan);
+      setIsEndLoanDialogOpen(true);
+    }
+  };
+
   const confirmDeleteLoan = async () => {
     if (!selectedLoanForDeletion || !loanerCar) return;
     
@@ -417,6 +436,39 @@ export default function LoanerCarDetailPage() {
     }
   };
 
+  const handleLoanEnded = async () => {
+    const loadLoans = async () => {
+      try {
+        const result = await LoanService.getAllLoans();
+        if (result && result.errorCode === ServiceErrorCode.success) {
+          const filteredLoans = result.result?.filter(loan => loan.loanerCarId === loanerCar?.id) || [];
+          setLoans(filteredLoans);
+        }
+      } catch (error) {
+        console.error("Erreur lors du rechargement des prêts:", error);
+      }
+    };
+    
+    const loadLoanerCar = async () => {
+      try {
+        const result = await LoanerCarService.getLoanerCarById(loanerCar?.id!);
+        if (result && result.errorCode === ServiceErrorCode.success && result.result) {
+          setLoanerCar(result.result);
+        }
+      } catch (error) {
+        console.error("Erreur lors du rechargement de la voiture de prêt:", error);
+      }
+    };
+    
+    await loadLoans();
+    await loadLoanerCar();
+    
+    setIsEndLoanDialogOpen(false);
+    setSelectedLoanForEnding(null);
+    
+    ErrorService.successMessage("Succès", "Prêt terminé avec succès");
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DISPONIBLE':
@@ -445,10 +497,12 @@ export default function LoanerCarDetailPage() {
 
   const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
+    return date.toLocaleString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -534,7 +588,7 @@ export default function LoanerCarDetailPage() {
               {/* Bouton Arrêter le prêt - uniquement si en prêt */}
               {loanerCar.status === 'EN_PRET' && (
                 <Button
-                  onClick={() => handleStatusChange('DISPONIBLE')}
+                  onClick={handleEndLoan}
                   className="border-2 border-green-500/60 text-green-400 hover:text-white hover:border-green-400 bg-transparent hover:bg-green-400/10 backdrop-blur-sm transition-all duration-200 focus:ring-2 focus:ring-green-400/20 focus:outline-none"
                 >
                   <Car className="w-4 h-4 mr-2" />
@@ -1032,6 +1086,17 @@ export default function LoanerCarDetailPage() {
           onLoanDeleted={confirmDeleteLoan}
           loan={selectedLoanForDeletion}
         />
+        {selectedLoanForEnding && (
+          <EndLoanDialog
+            isOpen={isEndLoanDialogOpen}
+            onClose={() => {
+              setIsEndLoanDialogOpen(false);
+              setSelectedLoanForEnding(null);
+            }}
+            onLoanEnded={handleLoanEnded}
+            loan={selectedLoanForEnding}
+          />
+        )}
       </div>
     </AuthGuard>
   )
