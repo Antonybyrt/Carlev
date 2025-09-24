@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Package, Car, User, CreditCard, FileText, Calendar, Truck, ArrowLeft, Trash2, Download } from "lucide-react"
+import { Package, Car, User, CreditCard, FileText, Calendar, Truck, ArrowLeft, Trash2, Download, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Navbar } from "@/components/navbar"
@@ -12,7 +12,7 @@ import { ErrorService } from "@/services/error.service"
 import { ServiceErrorCode } from "@/services/service.result"
 import OrderService from "@/services/order.service"
 import { IOrderExtended } from "@/models/order.model"
-import { DeleteOrderDialog } from "@/components/dialog";
+import { DeleteOrderDialog, EditOrderDialog } from "@/components/dialog";
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import jsPDF from 'jspdf'
@@ -30,6 +30,9 @@ export default function MyOrdersPage() {
   
   const [isDeleteOrderDialogOpen, setIsDeleteOrderDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<IOrderExtended | null>(null);
+  
+  const [isEditOrderDialogOpen, setIsEditOrderDialogOpen] = useState(false);
+  const [orderToEdit, setOrderToEdit] = useState<IOrderExtended | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
@@ -739,6 +742,18 @@ export default function MyOrdersPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => {
+                            setOrderToEdit(order);
+                            setIsEditOrderDialogOpen(true);
+                          }}
+                          className="border-green-500/30 text-green-400 hover:text-green-300 hover:border-green-400 hover:bg-green-500/10 transition-all duration-200"
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Modifier
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
                             setOrderToDelete(order);
                             setIsDeleteOrderDialogOpen(true);
                           }}
@@ -874,6 +889,29 @@ export default function MyOrdersPage() {
           loadOrders();
         }}
         order={orderToDelete}
+      />
+      
+      <EditOrderDialog
+        isOpen={isEditOrderDialogOpen}
+        onClose={() => {
+          setIsEditOrderDialogOpen(false);
+          setOrderToEdit(null);
+        }}
+        onOrderUpdated={() => {
+          const loadOrders = async () => {
+            try {
+              const result = await OrderService.getAllOrders();
+              if (result && result.errorCode === ServiceErrorCode.success) {
+                setOrders(result.result || []);
+                setFilteredOrders(result.result || []);
+              }
+            } catch (error) {
+              console.error("Erreur lors du rechargement des commandes:", error);
+            }
+          };
+          loadOrders();
+        }}
+        order={orderToEdit}
       />
     </AuthGuard>
   )

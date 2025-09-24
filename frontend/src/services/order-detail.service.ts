@@ -26,4 +26,20 @@ export default class OrderDetailService {
       return ServiceResult.failed();
     }
   }
+
+  static async deleteOrderDetailsByOrderId(orderId: number): Promise<ServiceResult<string>> {
+    try {
+      const response = await axios.delete(`${ApiService.baseURL}/order_detail/order/${orderId}`, {
+        headers: this.getAuthHeaders(),
+      });
+      return ServiceResult.success(response.data?.message || "Détails de commande supprimés avec succès");
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Erreur lors de la suppression des détails de commande:", error.response.data?.message);
+        return ServiceResult.failed();
+      }
+      console.error("Erreur de connexion:", error);
+      return ServiceResult.failed();
+    }
+  }
 } 

@@ -33,10 +33,33 @@ export class OrderDetailController {
         }
     }
 
+    async deleteOrderDetailsByOrderId(req: Request, res: Response): Promise<void> {
+        try {
+            const { orderId } = req.params;
+            const numericOrderId = parseInt(orderId);
+
+            if (isNaN(numericOrderId)) {
+                res.status(400).json({ error: "Invalid orderId" });
+                return;
+            }
+
+            const result = await OrderDetailService.deleteOrderDetailsByOrderId(numericOrderId);
+            if (result.errorCode === ServiceErrorCode.success) {
+                res.status(200).json({ message: "Order details deleted successfully" });
+            } else {
+                res.status(500).json({ error: "Internal Server Error" });
+            }
+        } catch (error) {
+            console.error("Error deleting order details:", error);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+
     buildRoutes(): Router {
         const router = express.Router();
         router.post("/", this.createOrderDetail.bind(this));
         router.get("/", this.getAllOrderDetails.bind(this));
+        router.delete("/order/:orderId", this.deleteOrderDetailsByOrderId.bind(this));
         return router;
     }
 } 

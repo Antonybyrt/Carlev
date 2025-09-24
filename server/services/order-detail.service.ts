@@ -32,4 +32,13 @@ export class OrderDetailService {
             return ServiceResult.failed();
         }
     }
+
+    static async deleteOrderDetailsByOrderId(orderId: number): Promise<ServiceResult<boolean>> {
+        try {
+            await OrderDetail.destroy({ where: { orderId } });
+            return ServiceResult.success(true);
+        } catch (error) {
+            return ServiceResult.failed();
+        }
+    }
 } 

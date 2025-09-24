@@ -59,6 +59,22 @@ export default class OrderService {
     }
   }
 
+  static async updateOrder(orderId: number, order: IOrder): Promise<ServiceResult<IOrderResponse>> {
+    try {
+      const response = await axios.put(`${ApiService.baseURL}/orders/update/${orderId}`, order, {
+        headers: this.getAuthHeaders(),
+      });
+      return ServiceResult.success(response.data);
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Erreur lors de la modification de la commande:", error.response.data?.message);
+        return ServiceResult.failed();
+      }
+      console.error("Erreur de connexion:", error);
+      return ServiceResult.failed();
+    }
+  }
+
   static async getUniqueSuppliers(): Promise<ServiceResult<number>> {
     try {
       const response = await axios.get(`${ApiService.baseURL}/supplier/count`, {
