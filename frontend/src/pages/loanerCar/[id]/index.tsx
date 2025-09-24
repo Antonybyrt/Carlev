@@ -324,7 +324,6 @@ export default function LoanerCarDetailPage() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const startDate = new Date(loanData.startDate);
-      startDate.setHours(0, 0, 0, 0);
 
       if (loanData.endDate) {
         const endDate = new Date(loanData.endDate);
