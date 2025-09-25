@@ -47,6 +47,54 @@ export default function NewOrderPage() {
       return lastNameA.localeCompare(lastNameB);
     });
   };
+
+  const sortLoginsByName = (logins: ILogin[]): ILogin[] => {
+    return [...logins].sort((a, b) => {
+      const nameA = (a.loginName || '').toLowerCase();
+      const nameB = (b.loginName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  const sortBrandsByName = (brands: ICarBrand[]): ICarBrand[] => {
+    return [...brands].sort((a, b) => {
+      const nameA = (a.brandName || '').toLowerCase();
+      const nameB = (b.brandName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  const sortModelsByName = (models: ICarModel[]): ICarModel[] => {
+    return [...models].sort((a, b) => {
+      const nameA = (a.modelName || '').toLowerCase();
+      const nameB = (b.modelName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  const sortSuppliersByName = (suppliers: ISupplier[]): ISupplier[] => {
+    return [...suppliers].sort((a, b) => {
+      const nameA = (a.supplierName || '').toLowerCase();
+      const nameB = (b.supplierName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  const sortRegistrationsByName = (registrations: IRegistration[]): IRegistration[] => {
+    return [...registrations].sort((a, b) => {
+      const nameA = (a.registrationName || '').toLowerCase();
+      const nameB = (b.registrationName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  const sortItemsByName = (items: IItem[]): IItem[] => {
+    return [...items].sort((a, b) => {
+      const nameA = (a.itemName || '').toLowerCase();
+      const nameB = (b.itemName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  };
   const [logins, setLogins] = useState<ILogin[]>([]);
   const [selectedLogin, setSelectedLogin] = useState<string>("");
   const [isLoadingLogins, setIsLoadingLogins] = useState(true);
@@ -102,13 +150,56 @@ export default function NewOrderPage() {
   const [orderDate, setOrderDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState<string>("");
 
+  const closeAllDropdowns = () => {
+    const dropdownIds = [
+      'loginDropdown',
+      'customerDropdown', 
+      'brandDropdown',
+      'modelDropdown',
+      'registrationDropdown',
+      'supplierDropdown'
+    ];
+    
+    // Fermer les dropdowns principaux
+    dropdownIds.forEach(id => {
+      const dropdown = document.getElementById(id);
+      if (dropdown) dropdown.classList.add('hidden');
+    });
+    
+    // Fermer tous les dropdowns d'items
+    selectedItems.forEach((_, index) => {
+      const dropdown = document.getElementById(`itemDropdown${index}`);
+      if (dropdown) dropdown.classList.add('hidden');
+    });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      
+      const isDropdownElement = target.closest('.dropdown-container') || 
+                               target.closest('[id$="Dropdown"]') ||
+                               target.closest('input[type="text"]') ||
+                               target.closest('input[type="search"]');
+      
+      if (!isDropdownElement) {
+        closeAllDropdowns();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectedItems]);
   useEffect(() => {
     const loadLogins = async () => {
       try {
         const result = await LoginService.getAllLogins();
         if (result && result.errorCode === ServiceErrorCode.success) {
-          setLogins(result.result || []);
-          setFilteredLogins(result.result || []);
+          const sortedLogins = sortLoginsByName(result.result || []);
+          setLogins(sortedLogins);
+          setFilteredLogins(sortedLogins);
           console.log("Logins récupérés:", result.result);
         } else {
           setLogins([]);
@@ -135,7 +226,8 @@ export default function NewOrderPage() {
       const filtered = logins.filter(login => 
         login.loginName.toLowerCase().includes(loginSearchTerm.toLowerCase())
       );
-      setFilteredLogins(filtered);
+      const sortedFiltered = sortLoginsByName(filtered);
+      setFilteredLogins(sortedFiltered);
     }
   }, [loginSearchTerm, logins]);
 
@@ -195,7 +287,8 @@ export default function NewOrderPage() {
       try {
         const result = await CarBrandService.getAllCarBrands();
         if (result && result.errorCode === ServiceErrorCode.success) {
-          setBrands(result.result || []);
+          const sortedBrands = sortBrandsByName(result.result || []);
+          setBrands(sortedBrands);
         } else {
           setBrands([]);
         }
@@ -216,7 +309,8 @@ export default function NewOrderPage() {
         try {
           const result = await CarModelService.getCarModelsByBrand(parseInt(selectedBrand));
           if (result && result.errorCode === ServiceErrorCode.success) {
-            setModels(result.result || []);
+            const sortedModels = sortModelsByName(result.result || []);
+            setModels(sortedModels);
           } else {
             setModels([]);
           }
@@ -241,7 +335,8 @@ export default function NewOrderPage() {
       try {
         const result = await SupplierService.getAllSuppliers();
         if (result && result.errorCode === ServiceErrorCode.success) {
-          setSuppliers(result.result || []);
+          const sortedSuppliers = sortSuppliersByName(result.result || []);
+          setSuppliers(sortedSuppliers);
         } else {
           setSuppliers([]);
         }
@@ -261,7 +356,8 @@ export default function NewOrderPage() {
       try {
         const result = await RegistrationService.getAllRegistrations();
         if (result && result.errorCode === ServiceErrorCode.success) {
-          setRegistrations(result.result || []);
+          const sortedRegistrations = sortRegistrationsByName(result.result || []);
+          setRegistrations(sortedRegistrations);
         } else {
           setRegistrations([]);
         }
@@ -281,7 +377,8 @@ export default function NewOrderPage() {
       try {
         const result = await ItemService.getAllItems();
         if (result && result.errorCode === ServiceErrorCode.success) {
-          setItems(result.result || []);
+          const sortedItems = sortItemsByName(result.result || []);
+          setItems(sortedItems);
         } else {
           setItems([]);
         }
@@ -423,7 +520,7 @@ export default function NewOrderPage() {
                       </h3>
                       
                       <div className="space-y-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 dropdown-container">
                           <Label htmlFor="loginSelect" className="text-gray-300">Sélectionner un compte</Label>
                           <div className="relative">
                             <Input
@@ -502,7 +599,7 @@ export default function NewOrderPage() {
                       </h3>
                       
                       <div className="space-y-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 dropdown-container">
                           <Label htmlFor="customerSelect" className="text-gray-300">Sélectionner un client</Label>
                           <div className="relative">
                             <Input
@@ -594,7 +691,7 @@ export default function NewOrderPage() {
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                      <div className="space-y-2 dropdown-container">
                         <Label htmlFor="brand" className="text-gray-300">Marque</Label>
                         <div className="relative">
                           <Input
@@ -685,7 +782,7 @@ export default function NewOrderPage() {
                         </div>
                       </div>
                       
-                      <div className="space-y-2">
+                      <div className="space-y-2 dropdown-container">
                         <Label htmlFor="model" className="text-gray-300">Modèle</Label>
                         <div className="relative">
                           <Input
@@ -780,7 +877,7 @@ export default function NewOrderPage() {
                     </div>
                     
                     {/* Plaque d'immatriculation */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 dropdown-container">
                       <Label htmlFor="registration" className="text-gray-300">Plaque d'immatriculation</Label>
                       <div className="relative">
                         <Input
@@ -893,7 +990,7 @@ export default function NewOrderPage() {
                           />
                         </div>
                         
-                        <div className="space-y-2">
+                        <div className="space-y-2 dropdown-container">
                           <Label htmlFor="supplier" className="text-gray-300">Fournisseur</Label>
                           <div className="relative">
                             <Input
@@ -991,7 +1088,7 @@ export default function NewOrderPage() {
                         {/* Liste des pièces sélectionnées */}
                         {selectedItems.map((selectedItem, index) => (
                           <div key={index} className="flex space-x-3 items-end">
-                            <div className="flex-1 space-y-2">
+                            <div className="flex-1 space-y-2 dropdown-container">
                               <Label className="text-gray-300 text-sm">Pièce {index + 1}</Label>
                               <div className="relative">
                                 <Input
@@ -1034,8 +1131,11 @@ export default function NewOrderPage() {
                                       item.id && !selectedItemIds.includes(item.id.toString())
                                     );
                                     
+                                    // Trier les items disponibles par ordre alphabétique
+                                    const sortedAvailableItems = sortItemsByName(availableItems);
+                                    
                                     if (searchTerm === "") {
-                                      return availableItems.map(item => (
+                                      return sortedAvailableItems.map(item => (
                                         <div
                                           key={item.id}
                                           className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
@@ -1052,13 +1152,14 @@ export default function NewOrderPage() {
                                         </div>
                                       ));
                                     } else {
-                                      const filtered = availableItems.filter(item => 
+                                      const filtered = sortedAvailableItems.filter(item => 
                                         item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
                                       );
-                                      if (filtered.length === 0) {
+                                      const sortedFiltered = sortItemsByName(filtered);
+                                      if (sortedFiltered.length === 0) {
                                         return <div className="px-3 py-2 text-gray-400 text-sm">Aucune pièce disponible</div>;
                                       }
-                                      return filtered.map(item => (
+                                      return sortedFiltered.map(item => (
                                         <div
                                           key={item.id}
                                           className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
@@ -1256,8 +1357,9 @@ export default function NewOrderPage() {
             try {
               const result = await CarBrandService.getAllCarBrands();
               if (result && result.errorCode === ServiceErrorCode.success) {
-                setBrands(result.result || []);
-                setFilteredBrands(result.result || []);
+                const sortedBrands = sortBrandsByName(result.result || []);
+                setBrands(sortedBrands);
+                setFilteredBrands(sortedBrands);
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des marques:", error);
@@ -1277,7 +1379,8 @@ export default function NewOrderPage() {
             try {
               const result = await CarBrandService.getAllCarBrands();
               if (result && result.errorCode === ServiceErrorCode.success) {
-                setBrands(result.result || []);
+                const sortedBrands = sortBrandsByName(result.result || []);
+                setBrands(sortedBrands);
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des marques:", error);
@@ -1352,7 +1455,8 @@ export default function NewOrderPage() {
             try {
               const result = await SupplierService.getAllSuppliers();
               if (result && result.errorCode === ServiceErrorCode.success) {
-                setSuppliers(result.result || []);
+                const sortedSuppliers = sortSuppliersByName(result.result || []);
+                setSuppliers(sortedSuppliers);
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des fournisseurs:", error);
@@ -1373,7 +1477,8 @@ export default function NewOrderPage() {
             try {
               const result = await SupplierService.getAllSuppliers();
               if (result && result.errorCode === ServiceErrorCode.success) {
-                setSuppliers(result.result || []);
+                const sortedSuppliers = sortSuppliersByName(result.result || []);
+                setSuppliers(sortedSuppliers);
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des fournisseurs:", error);
@@ -1396,7 +1501,8 @@ export default function NewOrderPage() {
             try {
               const result = await RegistrationService.getAllRegistrations();
               if (result && result.errorCode === ServiceErrorCode.success) {
-                setRegistrations(result.result || []);
+                const sortedRegistrations = sortRegistrationsByName(result.result || []);
+                setRegistrations(sortedRegistrations);
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des plaques:", error);
@@ -1417,7 +1523,8 @@ export default function NewOrderPage() {
             try {
               const result = await RegistrationService.getAllRegistrations();
               if (result && result.errorCode === ServiceErrorCode.success) {
-                setRegistrations(result.result || []);
+                const sortedRegistrations = sortRegistrationsByName(result.result || []);
+                setRegistrations(sortedRegistrations);
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des plaques:", error);
@@ -1440,7 +1547,8 @@ export default function NewOrderPage() {
             try {
               const result = await ItemService.getAllItems();
               if (result && result.errorCode === ServiceErrorCode.success) {
-                setItems(result.result || []);
+                const sortedItems = sortItemsByName(result.result || []);
+                setItems(sortedItems);
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des pièces:", error);
@@ -1461,7 +1569,8 @@ export default function NewOrderPage() {
             try {
               const result = await ItemService.getAllItems();
               if (result && result.errorCode === ServiceErrorCode.success) {
-                setItems(result.result || []);
+                const sortedItems = sortItemsByName(result.result || []);
+                setItems(sortedItems);
               }
             } catch (error) {
               console.error("Erreur lors du rechargement des pièces:", error);

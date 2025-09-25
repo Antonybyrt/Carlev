@@ -52,7 +52,7 @@ export default function LoanerCarPage() {
 
   
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(4);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -924,185 +924,219 @@ export default function LoanerCarPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                      <div className="flex items-center space-x-2 text-blue-400">
-                        <Info className="w-4 h-4" />
-                        <span className="text-sm font-medium">
-                          💡 Cliquez sur les badges de statut pour voir les détails de la voiture
-                        </span>
+                    {/* Contrôles de pagination */}
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center space-x-4">
+                        <Label className="text-gray-300 text-sm">Éléments par page:</Label>
+                        <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                          setItemsPerPage(parseInt(value));
+                          setCurrentPage(1);
+                        }}>
+                          <SelectTrigger className="w-20 bg-gray-700/60 border-gray-600 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-700 border-gray-600">
+                            <SelectItem value="5">5</SelectItem>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="25">25</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="text-sm text-gray-400">
+                        Affichage de {startIndex + 1} à {Math.min(endIndex, filteredLoanerCars.length)} sur {filteredLoanerCars.length} voitures
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {currentLoanerCars.map((loanerCar) => (
-                        <div
-                          key={loanerCar.id}
-                          className="bg-gray-700/50 rounded-lg p-4 border border-gray-600 hover:border-purple-400/50 transition-colors"
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <h3 className="text-lg font-semibold text-white">
-                                {loanerCar.brand?.brandName} {loanerCar.model?.modelName}
-                              </h3>
-                              <p className="text-gray-400 text-sm">
-                                {loanerCar.registration?.registrationName}
-                              </p>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <button
-                                onClick={() => router.push(`/loanerCar/${loanerCar.id}`)}
-                                className={`px-2 py-1 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center space-x-2 group ${
-                                  loanerCar.status === 'DISPONIBLE' 
-                                    ? 'bg-green-500/20 text-green-400 border-2 border-green-500/40 hover:bg-green-500/30 hover:border-green-500/60 hover:shadow-green-500/25'
-                                    : loanerCar.status === 'EN_PRET'
-                                    ? 'bg-blue-500/20 text-blue-400 border-2 border-blue-500/40 hover:bg-blue-500/30 hover:border-blue-500/60 hover:shadow-blue-500/25'
-                                    : 'bg-orange-500/20 text-orange-400 border-2 border-orange-500/40 hover:bg-orange-500/30 hover:border-orange-500/60 hover:shadow-orange-500/25'
-                                }`}>
-                                <span className="w-2 h-2 rounded-full bg-current animate-pulse"></span>
-                                <span>
-                                  {loanerCar.status === 'DISPONIBLE' && 'Disponible'}
-                                  {loanerCar.status === 'EN_PRET' && 'En prêt'}
-                                  {loanerCar.status === 'EN_MAINTENANCE' && 'Maintenance'}
+
+                    {/* Datatable */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-600">
+                            <th className="text-left py-3 px-4 text-gray-300 font-semibold">Véhicule</th>
+                            <th className="text-left py-3 px-4 text-gray-300 font-semibold">Marque</th>
+                            <th className="text-left py-3 px-4 text-gray-300 font-semibold">Modèle</th>
+                            <th className="text-left py-3 px-4 text-gray-300 font-semibold">Plaque</th>
+                            <th className="text-left py-3 px-4 text-gray-300 font-semibold">Statut</th>
+                            <th className="text-center py-3 px-4 text-gray-300 font-semibold">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {currentLoanerCars.map((loanerCar) => (
+                            <tr key={loanerCar.id} className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
+                              <td className="py-4 px-4">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                                    <Car className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div>
+                                    <div className="text-white font-medium">
+                                      {loanerCar.brand?.brandName} {loanerCar.model?.modelName}
+                                    </div>
+                                    <div className="text-gray-400 text-sm">
+                                      ID: {loanerCar.id}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-white">
+                                {loanerCar.brand?.brandName || 'N/A'}
+                              </td>
+                              <td className="py-4 px-4 text-white">
+                                {loanerCar.model?.modelName || 'N/A'}
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className="font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded">
+                                  {loanerCar.registration?.registrationName || 'N/A'}
                                 </span>
-                                <span className="text-xs opacity-70 group-hover:opacity-100 transition-opacity">→</span>
-                              </button>
-                            </div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <button
+                                  onClick={() => router.push(`/loanerCar/${loanerCar.id}`)}
+                                  className={`px-3 py-1 rounded-full text-sm font-semibold cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center space-x-2 group ${
+                                    loanerCar.status === 'DISPONIBLE' 
+                                      ? 'bg-green-500/20 text-green-400 border border-green-500/40 hover:bg-green-500/30 hover:border-green-500/60'
+                                      : loanerCar.status === 'EN_PRET'
+                                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40 hover:bg-blue-500/30 hover:border-blue-500/60'
+                                      : 'bg-orange-500/20 text-orange-400 border border-orange-500/40 hover:bg-orange-500/30 hover:border-orange-500/60'
+                                  }`}>
+                                  <span className="w-2 h-2 rounded-full bg-current animate-pulse"></span>
+                                  <span>
+                                    {loanerCar.status === 'DISPONIBLE' && 'Disponible'}
+                                    {loanerCar.status === 'EN_PRET' && 'En prêt'}
+                                    {loanerCar.status === 'EN_MAINTENANCE' && 'Maintenance'}
+                                  </span>
+                                </button>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="flex items-center justify-center space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => router.push(`/loanerCar/${loanerCar.id}`)}
+                                    className="border-blue-500/30 text-blue-400 hover:text-blue-300 hover:border-blue-400 hover:bg-blue-500/10"
+                                  >
+                                    <Info className="w-4 h-4 mr-1" />
+                                    Détails
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDeleteLoanerCar(loanerCar.id)}
+                                    disabled={loanerCar.status === 'EN_PRET'}
+                                    className={`transition-all duration-200 ${
+                                      loanerCar.status === 'EN_PRET'
+                                        ? 'border-gray-500/30 text-gray-400 cursor-not-allowed opacity-50'
+                                        : 'border-orange-500/30 text-orange-400 hover:text-orange-300 hover:border-orange-400 hover:bg-orange-500/10'
+                                    }`}
+                                    title={loanerCar.status === 'EN_PRET' ? 'Impossible d\'archiver une voiture en prêt. Terminez d\'abord le prêt.' : 'Archiver cette voiture de prêt'}
+                                  >
+                                    <Archive className="w-4 h-4 mr-1" />
+                                    Archiver
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    {/* Pagination améliorée */}
+                    {filteredLoanerCars.length > itemsPerPage && (
+                      <div className="mt-8 bg-gray-700/30 rounded-lg p-4 border border-gray-600/30">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-400">
+                            Page {currentPage} sur {totalPages} • {filteredLoanerCars.length} voitures au total
                           </div>
                           
-                          <div className="space-y-2 text-sm mb-4">
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Marque:</span>
-                              <span className="text-white">{loanerCar.brand?.brandName}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Modèle:</span>
-                              <span className="text-white">{loanerCar.model?.modelName}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Plaque:</span>
-                              <span className="text-white font-mono">{loanerCar.registration?.registrationName}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end">
+                          <div className="flex items-center space-x-2">
+                            {/* Bouton Première Page */}
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDeleteLoanerCar(loanerCar.id)}
-                              disabled={loanerCar.status === 'EN_PRET'}
-                              className={`transition-all duration-200 ${
-                                loanerCar.status === 'EN_PRET'
-                                  ? 'border-gray-500/30 text-gray-400 cursor-not-allowed opacity-50'
-                                  : 'border-orange-500/30 text-orange-400 hover:text-orange-300 hover:border-orange-400 hover:bg-orange-500/10'
-                              }`}
-                              title={loanerCar.status === 'EN_PRET' ? 'Impossible d\'archiver une voiture en prêt. Terminez d\'abord le prêt.' : 'Archiver cette voiture de prêt'}
+                              onClick={goToFirstPage}
+                              disabled={currentPage === 1}
+                              className="border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <Archive className="w-4 h-4 mr-2" />
-                              Archiver
+                              Première
+                            </Button>
+                            
+                            {/* Bouton Page Précédente */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={goToPreviousPage}
+                              disabled={currentPage === 1}
+                              className="border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Précédente
+                            </Button>
+                            
+                            {/* Numéros de Pages */}
+                            <div className="flex items-center space-x-1">
+                              {Array.from({ length: totalPages }, (_, index) => {
+                                const pageNumber = index + 1;
+                                
+                                if (
+                                  pageNumber === 1 ||
+                                  pageNumber === totalPages ||
+                                  (pageNumber >= currentPage - 2 && pageNumber <= currentPage + 2)
+                                ) {
+                                  return (
+                                    <Button
+                                      key={pageNumber}
+                                      variant={currentPage === pageNumber ? "default" : "outline"}
+                                      size="sm"
+                                      onClick={() => goToPage(pageNumber)}
+                                      className={
+                                        currentPage === pageNumber
+                                          ? "bg-purple-600 hover:bg-purple-700 text-white"
+                                          : "border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10"
+                                      }
+                                    >
+                                      {pageNumber}
+                                    </Button>
+                                  );
+                                } else if (
+                                  pageNumber === currentPage - 3 ||
+                                  pageNumber === currentPage + 3
+                                ) {
+                                  return (
+                                    <span key={pageNumber} className="px-2 text-gray-400">
+                                      ...
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })}
+                            </div>
+                            
+                            {/* Bouton Page Suivante */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={goToNextPage}
+                              disabled={currentPage === totalPages}
+                              className="border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Suivante
+                            </Button>
+                            
+                            {/* Bouton Dernière Page */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={goToLastPage}
+                              disabled={currentPage === totalPages}
+                              className="border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Dernière
                             </Button>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    
-                    {/* Pagination */}
-                    {filteredLoanerCars.length > itemsPerPage && (
-                      <div className="mt-6 flex items-center justify-center space-x-2">
-                        {/* Bouton Première Page */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={goToFirstPage}
-                          disabled={currentPage === 1}
-                          className="border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Première
-                        </Button>
-                        
-                        {/* Bouton Page Précédente */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={goToPreviousPage}
-                          disabled={currentPage === 1}
-                          className="border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Précédente
-                        </Button>
-                        
-                        {/* Numéros de Pages */}
-                        <div className="flex items-center space-x-1">
-                          {Array.from({ length: totalPages }, (_, index) => {
-                            const pageNumber = index + 1;
-                            
-                            if (
-                              pageNumber === 1 ||
-                              pageNumber === totalPages ||
-                              (pageNumber >= currentPage - 2 && pageNumber <= currentPage + 2)
-                            ) {
-                              return (
-                                <Button
-                                  key={pageNumber}
-                                  variant={currentPage === pageNumber ? "default" : "outline"}
-                                  size="sm"
-                                  onClick={() => goToPage(pageNumber)}
-                                  className={
-                                    currentPage === pageNumber
-                                      ? "bg-purple-600 hover:bg-purple-700 text-white"
-                                      : "border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10"
-                                  }
-                                >
-                                  {pageNumber}
-                                </Button>
-                              );
-                            } else if (
-                              pageNumber === currentPage - 3 ||
-                              pageNumber === currentPage + 3
-                            ) {
-                              return (
-                                <span key={pageNumber} className="px-2 text-gray-400">
-                                  ...
-                                </span>
-                              );
-                            }
-                            return null;
-                          })}
-                        </div>
-                        
-                        {/* Bouton Page Suivante */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={goToNextPage}
-                          disabled={currentPage === totalPages}
-                          className="border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Suivante
-                        </Button>
-                        
-                        {/* Bouton Dernière Page */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={goToLastPage}
-                          disabled={currentPage === totalPages}
-                          className="border-gray-600 text-gray-300 hover:text-white hover:border-purple-400 bg-transparent hover:bg-purple-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Dernière
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {/* Informations de pagination */}
-                    {filteredLoanerCars.length > 0 && (
-                      <div className="mt-4 text-center text-sm text-gray-400">
-                        Affichage de {startIndex + 1} à {Math.min(endIndex, filteredLoanerCars.length)} sur {filteredLoanerCars.length} voitures de prêt
-                        {totalPages > 1 && ` • Page ${currentPage} sur ${totalPages}`}
-                        {filteredLoanerCars.length !== loanerCars.length && (
-                          <span className="block mt-1 text-orange-400">
-                            Filtré sur {loanerCars.length} voitures au total
-                          </span>
-                        )}
                       </div>
                     )}
                   </>
