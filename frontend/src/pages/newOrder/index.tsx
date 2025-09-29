@@ -125,19 +125,23 @@ export default function NewOrderPage() {
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [filteredBrands, setFilteredBrands] = useState<ICarBrand[]>([]);
   const [isLoadingBrands, setIsLoadingBrands] = useState(false);
+  const [brandSearchTerm, setBrandSearchTerm] = useState<string>("");
   
   const [models, setModels] = useState<ICarModel[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [filteredModels, setFilteredModels] = useState<ICarModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [modelSearchTerm, setModelSearchTerm] = useState<string>("");
 
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<string>("");
   const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(false);
+  const [supplierSearchTerm, setSupplierSearchTerm] = useState<string>("");
   
   const [registrations, setRegistrations] = useState<IRegistration[]>([]);
   const [selectedRegistration, setSelectedRegistration] = useState<string>("");
   const [isLoadingRegistrations, setIsLoadingRegistrations] = useState(false);
+  const [registrationSearchTerm, setRegistrationSearchTerm] = useState<string>("");
 
   const [items, setItems] = useState<IItem[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
@@ -289,11 +293,14 @@ export default function NewOrderPage() {
         if (result && result.errorCode === ServiceErrorCode.success) {
           const sortedBrands = sortBrandsByName(result.result || []);
           setBrands(sortedBrands);
+          setFilteredBrands(sortedBrands);
         } else {
           setBrands([]);
+          setFilteredBrands([]);
         }
       } catch (error) {
         setBrands([]);
+        setFilteredBrands([]);
       } finally {
         setIsLoadingBrands(false);
       }
@@ -301,6 +308,18 @@ export default function NewOrderPage() {
 
     loadBrands();
   }, []);
+
+  useEffect(() => {
+    if (brandSearchTerm.trim() === "") {
+      setFilteredBrands(brands);
+    } else {
+      const filtered = brands.filter(brand => 
+        brand.brandName.toLowerCase().includes(brandSearchTerm.toLowerCase())
+      );
+      const sortedFiltered = sortBrandsByName(filtered);
+      setFilteredBrands(sortedFiltered);
+    }
+  }, [brandSearchTerm, brands]);
 
   useEffect(() => {
     if (selectedBrand && selectedBrand !== "loading" && selectedBrand !== "none") {
@@ -311,11 +330,14 @@ export default function NewOrderPage() {
           if (result && result.errorCode === ServiceErrorCode.success) {
             const sortedModels = sortModelsByName(result.result || []);
             setModels(sortedModels);
+            setFilteredModels(sortedModels);
           } else {
             setModels([]);
+            setFilteredModels([]);
           }
         } catch (error) {
           setModels([]);
+          setFilteredModels([]);
         } finally {
           setIsLoadingModels(false);
         }
@@ -323,11 +345,26 @@ export default function NewOrderPage() {
 
       loadModels();
       setSelectedModel("");
+      setModelSearchTerm("");
     } else {
       setModels([]);
+      setFilteredModels([]);
       setSelectedModel("");
+      setModelSearchTerm("");
     }
   }, [selectedBrand]);
+
+  useEffect(() => {
+    if (modelSearchTerm.trim() === "") {
+      setFilteredModels(models);
+    } else {
+      const filtered = models.filter(model => 
+        model.modelName.toLowerCase().includes(modelSearchTerm.toLowerCase())
+      );
+      const sortedFiltered = sortModelsByName(filtered);
+      setFilteredModels(sortedFiltered);
+    }
+  }, [modelSearchTerm, models]);
 
   useEffect(() => {
     const loadSuppliers = async () => {
@@ -351,6 +388,12 @@ export default function NewOrderPage() {
   }, []);
 
   useEffect(() => {
+    if (supplierSearchTerm.trim() === "") {
+    } else {
+    }
+  }, [supplierSearchTerm, suppliers]);
+
+  useEffect(() => {
     const loadRegistrations = async () => {
       setIsLoadingRegistrations(true);
       try {
@@ -370,6 +413,14 @@ export default function NewOrderPage() {
 
     loadRegistrations();
   }, []);
+
+  useEffect(() => {
+    if (registrationSearchTerm.trim() === "") {
+      // Pas besoin de filteredRegistrations car on utilise directement registrations
+    } else {
+      // Le filtrage se fera dans le rendu
+    }
+  }, [registrationSearchTerm, registrations]);
 
   useEffect(() => {
     const loadItems = async () => {
@@ -700,20 +751,11 @@ export default function NewOrderPage() {
                               `${brands.find(b => b.id?.toString() === selectedBrand)?.brandName} (sélectionnée)` : 
                               "Tapez pour rechercher une marque..."
                             }
-                            value={selectedBrand ? brands.find(b => b.id?.toString() === selectedBrand)?.brandName || "" : ""}
+                            value={brandSearchTerm}
                             onChange={(e) => {
-                              const searchValue = e.target.value;
-                              if (searchValue === "") {
+                              setBrandSearchTerm(e.target.value);
+                              if (selectedBrand) {
                                 setSelectedBrand("");
-                              } else {
-                                const filtered = brands.filter(brand => 
-                                  brand.brandName.toLowerCase().includes(searchValue.toLowerCase())
-                                );
-                                if (filtered.length === 1 && filtered[0].brandName.toLowerCase() === searchValue.toLowerCase()) {
-                                  setSelectedBrand(filtered[0].id?.toString() || "");
-                                } else {
-                                  setSelectedBrand("");
-                                }
                               }
                             }}
                             onFocus={() => {
@@ -737,15 +779,16 @@ export default function NewOrderPage() {
                           >
                             {isLoadingBrands ? (
                               <div className="px-3 py-2 text-gray-400 text-sm">Chargement des marques...</div>
-                            ) : brands.length === 0 ? (
+                            ) : filteredBrands.length === 0 ? (
                               <div className="px-3 py-2 text-gray-400 text-sm">Aucune marque trouvée</div>
                             ) : (
-                              brands.map(brand => (
+                              filteredBrands.map(brand => (
                                 <div
                                   key={brand.id}
                                   className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
                                   onClick={() => {
                                     setSelectedBrand(brand.id?.toString() || "");
+                                    setBrandSearchTerm("");
                                     const dropdown = document.getElementById('brandDropdown');
                                     if (dropdown) dropdown.classList.add('hidden');
                                   }}
@@ -791,20 +834,11 @@ export default function NewOrderPage() {
                               `${models.find(m => m.id?.toString() === selectedModel)?.modelName} (sélectionné)` : 
                               "Tapez pour rechercher un modèle..."
                             }
-                            value={selectedModel ? models.find(m => m.id?.toString() === selectedModel)?.modelName || "" : ""}
+                            value={modelSearchTerm}
                             onChange={(e) => {
-                              const searchValue = e.target.value;
-                              if (searchValue === "") {
+                              setModelSearchTerm(e.target.value);
+                              if (selectedModel) {
                                 setSelectedModel("");
-                              } else {
-                                const filtered = models.filter(model => 
-                                  model.modelName.toLowerCase().includes(searchValue.toLowerCase())
-                                );
-                                if (filtered.length === 1 && filtered[0].modelName.toLowerCase() === searchValue.toLowerCase()) {
-                                  setSelectedModel(filtered[0].id?.toString() || "");
-                                } else {
-                                  setSelectedModel("");
-                                }
                               }
                             }}
                             onFocus={() => {
@@ -829,15 +863,16 @@ export default function NewOrderPage() {
                           >
                             {isLoadingModels ? (
                               <div className="px-3 py-2 text-gray-400 text-sm">Chargement des modèles...</div>
-                            ) : models.length === 0 ? (
+                            ) : filteredModels.length === 0 ? (
                               <div className="px-3 py-2 text-gray-400 text-sm">Aucun modèle trouvé pour cette marque</div>
                             ) : (
-                              models.map(model => (
+                              filteredModels.map(model => (
                                 <div
                                   key={model.id}
                                   className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
                                   onClick={() => {
                                     setSelectedModel(model.id?.toString() || "");
+                                    setModelSearchTerm("");
                                     const dropdown = document.getElementById('modelDropdown');
                                     if (dropdown) dropdown.classList.add('hidden');
                                   }}
@@ -886,20 +921,11 @@ export default function NewOrderPage() {
                             `${registrations.find(r => r.id?.toString() === selectedRegistration)?.registrationName} (sélectionnée)` : 
                             "Tapez pour rechercher une plaque..."
                           }
-                          value={selectedRegistration ? registrations.find(r => r.id?.toString() === selectedRegistration)?.registrationName || "" : ""}
+                          value={registrationSearchTerm}
                           onChange={(e) => {
-                            const searchValue = e.target.value;
-                            if (searchValue === "") {
+                            setRegistrationSearchTerm(e.target.value);
+                            if (selectedRegistration) {
                               setSelectedRegistration("");
-                            } else {
-                              const filtered = registrations.filter(registration => 
-                                registration.registrationName.toLowerCase().includes(searchValue.toLowerCase())
-                              );
-                              if (filtered.length === 1 && filtered[0].registrationName.toLowerCase() === searchValue.toLowerCase()) {
-                                setSelectedRegistration(filtered[0].id?.toString() || "");
-                              } else {
-                                setSelectedRegistration("");
-                              }
                             }
                           }}
                           onFocus={() => {
@@ -923,23 +949,47 @@ export default function NewOrderPage() {
                         >
                           {isLoadingRegistrations ? (
                             <div className="px-3 py-2 text-gray-400 text-sm">Chargement des plaques...</div>
-                          ) : registrations.length === 0 ? (
-                            <div className="px-3 py-2 text-gray-400 text-sm">Aucune plaque trouvée</div>
-                          ) : (
-                            registrations.map(registration => (
-                              <div
-                                key={registration.id}
-                                className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
-                                onClick={() => {
-                                  setSelectedRegistration(registration.id?.toString() || "");
-                                  const dropdown = document.getElementById('registrationDropdown');
-                                  if (dropdown) dropdown.classList.add('hidden');
-                                }}
-                              >
-                                {registration.registrationName}
-                              </div>
-                            ))
-                          )}
+                          ) : (() => {
+                            const searchTerm = registrationSearchTerm.trim();
+                            if (searchTerm === "") {
+                              return registrations.map(registration => (
+                                <div
+                                  key={registration.id}
+                                  className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedRegistration(registration.id?.toString() || "");
+                                    setRegistrationSearchTerm("");
+                                    const dropdown = document.getElementById('registrationDropdown');
+                                    if (dropdown) dropdown.classList.add('hidden');
+                                  }}
+                                >
+                                  {registration.registrationName}
+                                </div>
+                              ));
+                            } else {
+                              const filtered = registrations.filter(registration => 
+                                registration.registrationName.toLowerCase().includes(searchTerm.toLowerCase())
+                              );
+                              const sortedFiltered = sortRegistrationsByName(filtered);
+                              if (sortedFiltered.length === 0) {
+                                return <div className="px-3 py-2 text-gray-400 text-sm">Aucune plaque trouvée</div>;
+                              }
+                              return sortedFiltered.map(registration => (
+                                <div
+                                  key={registration.id}
+                                  className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedRegistration(registration.id?.toString() || "");
+                                    setRegistrationSearchTerm("");
+                                    const dropdown = document.getElementById('registrationDropdown');
+                                    if (dropdown) dropdown.classList.add('hidden');
+                                  }}
+                                >
+                                  {registration.registrationName}
+                                </div>
+                              ));
+                            }
+                          })()}
                         </div>
                       </div>
                       
@@ -999,20 +1049,11 @@ export default function NewOrderPage() {
                                 `${suppliers.find(s => s.id?.toString() === selectedSupplier)?.supplierName} (sélectionné)` : 
                                 "Tapez pour rechercher un fournisseur..."
                               }
-                              value={selectedSupplier ? suppliers.find(s => s.id?.toString() === selectedSupplier)?.supplierName || "" : ""}
+                              value={supplierSearchTerm}
                               onChange={(e) => {
-                                const searchValue = e.target.value;
-                                if (searchValue === "") {
+                                setSupplierSearchTerm(e.target.value);
+                                if (selectedSupplier) {
                                   setSelectedSupplier("");
-                                } else {
-                                  const filtered = suppliers.filter(supplier => 
-                                    supplier.supplierName.toLowerCase().includes(searchValue.toLowerCase())
-                                  );
-                                  if (filtered.length === 1 && filtered[0].supplierName.toLowerCase() === searchValue.toLowerCase()) {
-                                    setSelectedSupplier(filtered[0].id?.toString() || "");
-                                  } else {
-                                    setSelectedSupplier("");
-                                  }
                                 }
                               }}
                               onFocus={() => {
@@ -1036,23 +1077,47 @@ export default function NewOrderPage() {
                             >
                               {isLoadingSuppliers ? (
                                 <div className="px-3 py-2 text-gray-400 text-sm">Chargement des fournisseurs...</div>
-                              ) : suppliers.length === 0 ? (
-                                <div className="px-3 py-2 text-gray-400 text-sm">Aucun fournisseur trouvé</div>
-                              ) : (
-                                suppliers.map(supplier => (
-                                  <div
-                                    key={supplier.id}
-                                    className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
-                                    onClick={() => {
-                                      setSelectedSupplier(supplier.id?.toString() || "");
-                                      const dropdown = document.getElementById('supplierDropdown');
-                                      if (dropdown) dropdown.classList.add('hidden');
-                                    }}
-                                  >
-                                    {supplier.supplierName}
-                                  </div>
-                                ))
-                              )}
+                              ) : (() => {
+                                const searchTerm = supplierSearchTerm.trim();
+                                if (searchTerm === "") {
+                                  return suppliers.map(supplier => (
+                                    <div
+                                      key={supplier.id}
+                                      className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
+                                      onClick={() => {
+                                        setSelectedSupplier(supplier.id?.toString() || "");
+                                        setSupplierSearchTerm("");
+                                        const dropdown = document.getElementById('supplierDropdown');
+                                        if (dropdown) dropdown.classList.add('hidden');
+                                      }}
+                                    >
+                                      {supplier.supplierName}
+                                    </div>
+                                  ));
+                                } else {
+                                  const filtered = suppliers.filter(supplier => 
+                                    supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase())
+                                  );
+                                  const sortedFiltered = sortSuppliersByName(filtered);
+                                  if (sortedFiltered.length === 0) {
+                                    return <div className="px-3 py-2 text-gray-400 text-sm">Aucun fournisseur trouvé</div>;
+                                  }
+                                  return sortedFiltered.map(supplier => (
+                                    <div
+                                      key={supplier.id}
+                                      className="px-3 py-2 text-white hover:bg-gray-600 cursor-pointer"
+                                      onClick={() => {
+                                        setSelectedSupplier(supplier.id?.toString() || "");
+                                        setSupplierSearchTerm("");
+                                        const dropdown = document.getElementById('supplierDropdown');
+                                        if (dropdown) dropdown.classList.add('hidden');
+                                      }}
+                                    >
+                                      {supplier.supplierName}
+                                    </div>
+                                  ));
+                                }
+                              })()}
                             </div>
                           </div>
                           
@@ -1391,6 +1456,8 @@ export default function NewOrderPage() {
           loadBrands();
           setSelectedBrand("");
           setSelectedModel("");
+          setBrandSearchTerm("");
+          setModelSearchTerm("");
         }}
         carBrand={brands.find(b => b.id?.toString() === selectedBrand) || null}
       />
@@ -1442,6 +1509,7 @@ export default function NewOrderPage() {
             loadModels();
           }
           setSelectedModel("");
+          setModelSearchTerm("");
         }}
         carModel={models.find(m => m.id?.toString() === selectedModel) || null}
       />
@@ -1488,6 +1556,7 @@ export default function NewOrderPage() {
           };
           loadSuppliers();
           setSelectedSupplier("");
+          setSupplierSearchTerm("");
         }}
         supplier={suppliers.find(s => s.id?.toString() === selectedSupplier) || null}
       />
@@ -1534,6 +1603,7 @@ export default function NewOrderPage() {
           };
           loadRegistrations();
           setSelectedRegistration("");
+          setRegistrationSearchTerm("");
         }}
         registration={registrations.find(r => r.id?.toString() === selectedRegistration) || null}
       />
