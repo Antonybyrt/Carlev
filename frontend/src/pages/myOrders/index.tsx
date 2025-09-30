@@ -27,6 +27,7 @@ export default function MyOrdersPage() {
   const [searchClient, setSearchClient] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [searchPlate, setSearchPlate] = useState("");
+  const [searchItem, setSearchItem] = useState("");
   
   const [isDeleteOrderDialogOpen, setIsDeleteOrderDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<IOrderExtended | null>(null);
@@ -95,8 +96,16 @@ export default function MyOrdersPage() {
       });
     }
 
+    if (searchItem.trim()) {
+      filtered = filtered.filter(order => {
+        return order.orderDetails?.some(detail => 
+          detail.item?.itemName?.toLowerCase().includes(searchItem.toLowerCase())
+        ) || false;
+      });
+    }
+
     setFilteredOrders(filtered);
-  }, [orders, searchAccount, searchClient, searchDate, searchPlate]);
+  }, [orders, searchAccount, searchClient, searchDate, searchPlate, searchItem]);
 
   const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
@@ -436,7 +445,7 @@ export default function MyOrdersPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="searchAccount" className="text-gray-300 text-sm">Compte</Label>
                     <Input
@@ -480,9 +489,20 @@ export default function MyOrdersPage() {
                       className="bg-gray-700/60 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400"
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="searchItem" className="text-gray-300 text-sm">Pièce</Label>
+                    <Input
+                      id="searchItem"
+                      placeholder="Rechercher par pièce..."
+                      value={searchItem}
+                      onChange={(e) => setSearchItem(e.target.value)}
+                      className="bg-gray-700/60 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400"
+                    />
+                  </div>
                 </div>
 
-                {(searchAccount || searchClient || searchDate || searchPlate) && (
+                {(searchAccount || searchClient || searchDate || searchPlate || searchItem) && (
                   <div className="mt-4 flex justify-end">
                     <Button
                       variant="outline"
@@ -491,6 +511,7 @@ export default function MyOrdersPage() {
                         setSearchClient("");
                         setSearchDate("");
                         setSearchPlate("");
+                        setSearchItem("");
                       }}
                       className="border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10"
                     >
@@ -542,6 +563,7 @@ export default function MyOrdersPage() {
                         setSearchClient("");
                         setSearchDate("");
                         setSearchPlate("");
+                        setSearchItem("");
                       }}
                       className="border-gray-600 text-gray-300 hover:text-white hover:border-blue-400 bg-transparent hover:bg-blue-400/10"
                     >

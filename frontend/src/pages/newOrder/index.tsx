@@ -751,7 +751,7 @@ export default function NewOrderPage() {
                               `${brands.find(b => b.id?.toString() === selectedBrand)?.brandName} (sélectionnée)` : 
                               "Tapez pour rechercher une marque..."
                             }
-                            value={brandSearchTerm}
+                            value={selectedBrand ? brands.find(b => b.id?.toString() === selectedBrand)?.brandName || "" : brandSearchTerm}
                             onChange={(e) => {
                               setBrandSearchTerm(e.target.value);
                               if (selectedBrand) {
@@ -834,7 +834,7 @@ export default function NewOrderPage() {
                               `${models.find(m => m.id?.toString() === selectedModel)?.modelName} (sélectionné)` : 
                               "Tapez pour rechercher un modèle..."
                             }
-                            value={modelSearchTerm}
+                            value={selectedModel ? models.find(m => m.id?.toString() === selectedModel)?.modelName || "" : modelSearchTerm}
                             onChange={(e) => {
                               setModelSearchTerm(e.target.value);
                               if (selectedModel) {
@@ -921,7 +921,7 @@ export default function NewOrderPage() {
                             `${registrations.find(r => r.id?.toString() === selectedRegistration)?.registrationName} (sélectionnée)` : 
                             "Tapez pour rechercher une plaque..."
                           }
-                          value={registrationSearchTerm}
+                          value={selectedRegistration ? registrations.find(r => r.id?.toString() === selectedRegistration)?.registrationName || "" : registrationSearchTerm}
                           onChange={(e) => {
                             setRegistrationSearchTerm(e.target.value);
                             if (selectedRegistration) {
@@ -1049,7 +1049,7 @@ export default function NewOrderPage() {
                                 `${suppliers.find(s => s.id?.toString() === selectedSupplier)?.supplierName} (sélectionné)` : 
                                 "Tapez pour rechercher un fournisseur..."
                               }
-                              value={supplierSearchTerm}
+                              value={selectedSupplier ? suppliers.find(s => s.id?.toString() === selectedSupplier)?.supplierName || "" : supplierSearchTerm}
                               onChange={(e) => {
                                 setSupplierSearchTerm(e.target.value);
                                 if (selectedSupplier) {
